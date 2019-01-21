@@ -4,9 +4,9 @@
 
 ### HOW TO WORK:
 
-> make build
+`make build`
 
-> sudo ./decoder -i [device] | -p [pcap]
+`sudo ./decoder -i [device] | -p [pcap]`
 
 
 These project is created to sniff packets (live or from pcaps) and decode by dissectors
