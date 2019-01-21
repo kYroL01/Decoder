@@ -9,4 +9,4 @@
 `sudo ./decoder -i [device] | -p [pcap]`
 
 
-These project is created to sniff packets (live or from pcaps) and decode by dissectors
+The project is created to sniff packets (live or from pcaps) and decode by dissectors
