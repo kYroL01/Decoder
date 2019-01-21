@@ -1,6 +1,6 @@
 #
-#   Decoder - parsing and classification of traffic
-#   Copyright (C) 2016-2019 Michele Campus <fci1908@gmail.com>
+#   Decoder - Makefile
+#   Copyright (C) 2019 Michele Campus <fci1908@gmail.com>
 #
 #   This file is part of decoder.
 #
