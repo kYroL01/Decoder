@@ -185,8 +185,9 @@ static unsigned int process_packet(const u_char * payload,
 {
     int ret = 0;
 
-
-    /*** UDP Protocols ***/
+    /* ################# */
+    /**  UDP Protocols  **/
+    /* ################# */
     if(proto_id_l3 == IPPROTO_UDP) {
 
         /**
@@ -240,10 +241,6 @@ static unsigned int process_packet(const u_char * payload,
             fprintf(stderr, "error on check rtcp_version: bad pkt type\n");
             return ret;
         }
-        else if(ret == -4) {
-            fprintf(stderr, "error: no extended report found\n");
-            return ret;
-        }
 
         char* json_buffer = malloc(sizeof(char) * JSON_BUFFER_LEN);
 
@@ -265,56 +262,18 @@ static unsigned int process_packet(const u_char * payload,
 
         // return code for RTCP
         ret = 4;
-
-        /* /\** */
-        /*    check for RTCP-XR protocol */
-        /* *\/ */
-        /* // check version */
-        /* ret = check_rtcpxr_version(payload, size_payload); */
-
-        /* if(ret == -1) { */
-        /*     fprintf(stderr, "error on check rtcpxr_version: bad params\n"); */
-        /*     return ret; */
-        /* } */
-        /* else if(ret == -2) { */
-        /*     fprintf(stderr, "error on check rtcpxr_version: bad version\n"); */
-        /*     return ret; */
-        /* } */
-        /* else if(ret == -3) { */
-        /*     fprintf(stderr, "error on check rtcpxr_version: bad pkt type\n"); */
-        /*     return ret; */
-        /* } */
-        /* else if(ret == -4) { */
-        /*     fprintf(stderr, "error: no extended report found\n"); */
-        /*     return ret; */
-        /* } */
-
-        /* char* json_buffer = malloc(sizeof(char) * JSON_BUFFER_LEN); */
-
-        /* // dissect */
-        /* ret = rtcpxr_dissector(payload, */
-        /*                        size_payload, */
-        /*                        json_buffer, */
-        /*                        JSON_BUFFER_LEN); */
-        /* if(ret == -1) */
-        /*     fprintf(stderr, "error on rtcpxr_dissector\n"); */
-
-        /* printf("\nRTCP-XR protocol FOUND ->\n"); */
-        /* /\* Print JSON buffer *\/ */
-        /* printf("%s\n\n", json_buffer); */
-
-        /* /\* free json_buffer *\/ */
-        /* free(json_buffer); */
     }
 
-    /*** TCP Protocols ***/
+    /* ################# */
+    /**  TCP Protocols  **/
+    /* ################# */
     else {
 
         /**
            Check TLS dissector
         */
 
-        char json_buffer[JSON_BUFFER_LEN];
+        char* json_buffer = malloc(sizeof(char) * JSON_BUFFER_LEN);
 
         struct Flow_key  *flow_key  = NULL;
         struct Handshake *handshake = NULL;
@@ -406,6 +365,8 @@ static unsigned int process_packet(const u_char * payload,
         /**
            Check DIAMETER dissector
         */
+
+        memset(json_buffer, 0, JSON_BUFFER_LEN);
 
         // Call DIAMETER dissector function
         ret = diameter_dissector(payload,

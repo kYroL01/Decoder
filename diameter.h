@@ -1,20 +1,20 @@
 /**
    DIAMETER dissector
-   
-   decoder - 
-   Copyright (C) 2016-2017 Michele Campus <fci1908@gmail.com>
-   
+
+   decoder -
+   Copyright (C) 2016-2019 Michele Campus <fci1908@gmail.com>
+
    This file is part of decoder.
-   
+
    decoder is free software: you can redistribute it and/or modify it under the
    terms of the GNU General Public License as published by the Free Software
    Foundation, either version 3 of the License, or (at your option) any later
    version.
-   
+
    decoder is distributed in the hope that it will be useful, but WITHOUT ANY
    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
    A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-   
+
    You should have received a copy of the GNU General Public License along with
    decoder. If not, see <http://www.gnu.org/licenses/>.
 **/
@@ -29,11 +29,11 @@
 #include <time.h>
 
 
-#define SUBSCR_ID_JSON "\"Subscription-ID\":[{\"Subscription-ID-data\":%s, \"Subscription-ID-type\":%u}], "
-#define SERV_PARAM_JSON "\"Service-parameter-info\":[{\"Service-parameter-type\":%u, \"Service-parameter-value\":%s}], "
-#define REQ_SERV_UNT_JSON "\"Requested-service-unit\":[{\"Value-digits\":%lu, \"Currency-code\":%u}], "
-#define GRANT_SERV_UNT_JSON "\"Granted-service-unit\":[{\"Value-digits\":%lu, \"Currency-code\":%u}], "
-#define USED_SERV_UNT_JSON "\"Used-service-unit\":[{\"Value-digits\":%lu, \"Currency-code\":%u}], "
+#define SUBSCR_ID_JSON "\"subscription-ID\":[{\"Subscription-ID-data\":%s, \"Subscription-ID-type\":%u}], "
+#define SERV_PARAM_JSON "\"service-parameter-info\":[{\"Service-parameter-type\":%u, \"Service-parameter-value\":%s}], "
+#define REQ_SERV_UNT_JSON "\"requested-service-unit\":[{\"Value-digits\":%lu, \"Currency-code\":%u}], "
+#define GRANT_SERV_UNT_JSON "\"granted-service-unit\":[{\"Value-digits\":%lu, \"Currency-code\":%u}], "
+#define USED_SERV_UNT_JSON "\"used-service-unit\":[{\"Value-digits\":%lu, \"Currency-code\":%u}], "
 
 
 #define JSON_BUFFER_LEN 5000
@@ -84,7 +84,7 @@ typedef enum {
   DEST_HOST      = 293,
   ORIGIN_REALM   = 296,
   DEST_REALM     = 283,
-  TIMESTAMP      = 55,
+  TIMESTAMP      =  55,
   VENDOR_ID      = 266,
   SERV_PAR_INFO  = 440,
   AUTH_APP_ID    = 258,
@@ -99,9 +99,9 @@ typedef enum {
   VALID_TIME     = 448,
   REQ_SERV_UNT   = 437,
   GRANT_SERV_UNT = 431,
-  USED_SERV_UNT   = 446,
+  USED_SERV_UNT  = 446,
   MULTI_SERV_CC  = 456
-  /* CHEKC IF COMPLETE */
+  /* CHECK IF COMPLETE */
 } avp_block_code;
 
 // AVP HEADER
@@ -147,7 +147,7 @@ struct used_serv_unit_t
   u_int8_t curr_code[4];
   /* Maybe incomplete */
 };
-  
+
 /* List of ALL the structures for the AVP information block */
 char* session_id;                          // 263
 char* serv_contx_id;                       // 461
@@ -155,7 +155,7 @@ char* org_host;                            // 264
 char* dst_host;                            // 293
 char* org_realm;                           // 296
 char* dst_realm;                           // 283
-time_t tm;                                 // 55
+time_t tm;                                 //  55
 u_int32_t auth_app_id;                     // 258
 u_int32_t cc_req_num;                      // 415
 u_int32_t cc_req_type;                     // 416 (1 - 4)

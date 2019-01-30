@@ -37,7 +37,7 @@
 #define SDES_REPORT_INFO_JSON "{\"type\":%u,\"text\":\"%.*s\"},"
 #define SDES_REPORT_END_JSON "],\"sdes_report_count\":%u,"
 
-#define EXTENDED_REPORT_JSON "\"Extended_report_information\":{\"type\":%u, \"identifier\":%u, \"loss_rate\":%u, \"discard_rate\":%u, \"burst_rate\":%u, \"gap_rate\":%u, \"burst_duration\":%u, \"gap_duration\":%u, \"round_trip_delay\":%u, \"end_sys_delay\":%u, \"signal_lev\":%u, \"noise_lev\":%u, \"RERL\":%u, \"Gmin\":%u, \"R_fact\":%u, \"ext_R_fact\":%u, \"MOS_LQ\":%u, \"MOS_CQ\":%u, \"RX_conf\":[{\"PLC\":%u, \"JB_adapt\":%u, \"JB_rate\":%u}], \"JB_nom\":%u, \"JB_max\":%u, \"JB_abs_max\":%u}"
+#define EXTENDED_REPORT_JSON "\"extended_report_information\":{\"type\":%u, \"identifier\":%u, \"loss_rate\":%u, \"discard_rate\":%u, \"burst_rate\":%u, \"gap_rate\":%u, \"burst_duration\":%u, \"gap_duration\":%u, \"round_trip_delay\":%u, \"end_sys_delay\":%u, \"signal_lev\":%u, \"noise_lev\":%u, \"RERL\":%u, \"Gmin\":%u, \"R_fact\":%u, \"ext_R_fact\":%u, \"MOS_LQ\":%u, \"MOS_CQ\":%u, \"RX_conf\":[{\"PLC\":%u, \"JB_adapt\":%u, \"JB_rate\":%u}], \"JB_nom\":%u, \"JB_max\":%u, \"JB_abs_max\":%u}"
 
 extern int send_sdes;
 
