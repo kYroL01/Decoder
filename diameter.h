@@ -2,7 +2,7 @@
    DIAMETER dissector
 
    decoder -
-   Copyright (C) 2016-2019 Michele Campus <fci1908@gmail.com>
+   Copyright (C) 2016-2019 Michele Campus <michelecampus5@gmail.com>
 
    This file is part of decoder.
 
@@ -28,33 +28,228 @@
 #include <arpa/inet.h>
 #include <time.h>
 
+/* Definition of Diameter common info JSON */
+#define DIAMETER_BEGIN_JSON "\"diameter_info\": {"
+#define DIAMETER_HEADER_JSON "[\"request\":%u,\"answer\":%u,\"command\":%u,\"app-ID\":%u,\"hop-to-hop-ID\":%u,\"end-to-end-ID\":%u],"
+#define DIAMETER_END_JSON "}"
 
-#define SUBSCR_ID_JSON "\"subscription-ID\":[{\"Subscription-ID-data\":%s, \"Subscription-ID-type\":%u}], "
-#define SERV_PARAM_JSON "\"service-parameter-info\":[{\"Service-parameter-type\":%u, \"Service-parameter-value\":%s}], "
-#define REQ_SERV_UNT_JSON "\"requested-service-unit\":[{\"Value-digits\":%lu, \"Currency-code\":%u}], "
-#define GRANT_SERV_UNT_JSON "\"granted-service-unit\":[{\"Value-digits\":%lu, \"Currency-code\":%u}], "
-#define USED_SERV_UNT_JSON "\"used-service-unit\":[{\"Value-digits\":%lu, \"Currency-code\":%u}], "
+/* Definition of AVPs JSON */
+// Basic DIAMETER
 
+// 3GPP DIAMETER
+
+// SIP DIAMETER
+
+// CREDIT CONTROL
+#define SUBSCR_ID_JSON "\"subscription-ID\":{\"Subscription-ID-data\":%s, \"Subscription-ID-type\":%u}, "
+#define SERV_PARAM_JSON "\"service-parameter-info\":{\"Service-parameter-type\":%u, \"Service-parameter-value\":%s}, "
+#define REQ_SERV_JSON "\"requested-service\":{\"Value-digits\":%lu, \"Currency-code\":%u}, "
+#define GRANT_SERV_JSON "\"granted-service\":{\"Value-digits\":%lu, \"Currency-code\":%u}, "
+#define USED_SERV_JSON "\"used-service\":{\"Value-digits\":%lu, \"Currency-code\":%u}, "
 
 #define JSON_BUFFER_LEN 5000
 
 // Header Flags possibile values
-#define REQUEST   0X80
-#define PROXYABLE 0X40
-#define ERROR     0X20
-#define RETRASM   0X10
+/* #define REQUEST   0X80 */
+/* #define PROXYABLE 0X40 */
+/* #define ERROR     0X20 */
+/* #define RETRASM   0X10 */
 
+#define REQ  1
+#define ANSW 0
+
+/** ############################## COMMANDS ############################## **/
+
+/**
+   Each command Request/Answer pair is assigned a command code.
+**/
+// Base
 typedef enum {
     AC = 271,
+    CC = 272, // Credit control
     AS = 274,
-    CC = 272,
     CE = 257,
     DW = 280,
     DP = 282,
     RA = 258,
     ST = 275
-} com_type_t;
+} com_diam_base_t;
 
+// 3GPP
+typedef enum {
+    // Diameter base
+    UA = 300,
+    SA = 301,
+    LI = 302,
+    MA = 303,
+    RT = 304,
+    PP = 305,
+    UD = 306,
+    PU = 307,
+    SN = 308,
+    PN = 309,
+    BI = 310,
+    MP = 311,
+    // 3GPP
+    UL = 316,
+    CL = 317,
+    AI = 318,
+    ID = 319,
+    DS = 320,
+    PE = 321,
+    NO = 323,
+    EC = 324
+} com_diam_3GPP_t;
+
+// Mobile
+typedef enum {
+    AM = 260,
+    HA = 262
+} com_diam_mobile_t;
+
+// SIP
+typedef enum {
+    UA = 283,
+    SA = 284,
+    LI = 285,
+    MA = 286,
+    RT = 287,
+    PP = 288
+} com_diam_sip_t;
+
+
+/** ############################## APPLICATION-ID ############################## **/
+
+/**
+   Application-ID is used to identify for which Diameter application the message is applicable.
+   The application can be an authentication application, an accounting application, or a vendor-specific application.
+**/
+typedef enum {
+    COMMON_MSG  = 0,
+    NASREQ      = 1,
+    BASE_ACC    = 3,
+    CREDIT_CTRL = 4,
+    SIP         = 6,
+    QOS         = 9,
+    NAT_CA      = 12,
+    ERP         = 13
+    /* add more if necessary */
+} diam_app_id_t;
+
+typedef enum {
+    _3GPP_CX    = 16777216,     // IMS I/S-CSCF to HSS interface
+    _3GPP_SH    = 16777217,     // VoIP/IMS SIP Application Server to HSS interface
+    _3GPP_RE    = 16777218,
+    _3GPP_WX    = 16777219,
+    _3GPP_ZN    = 16777220,
+    _3GPP_ZH    = 16777221,
+    _3GPP_GQ    = 16777222,
+    _3GPP_GMB   = 16777223,
+    _3GPP_GX    = 16777224,
+    _3GPP_GXoGY = 16777225,
+    _3GPP_MM10  = 16777226,
+    _3GPP_PR    = 16777230,
+    _3GPP_RX    = 16777236,     // Policy and charging control
+    _3GPP_Sta   = 16777250,
+    _3GPP_S6ad  = 16777251,     // LTE Roaming signaling
+    _3GPP_S13   = 16777252,     // Interface between EIR and MME
+    _3GPP_SLg   = 16777255,     // Location services
+    _3GPP_SLg   = 16777345      // Interface between SCEF and HSS
+    /* add more if necessary */
+} diam_3gpp_app_id_t;
+
+
+/** ############################## AVP CODES ############################## **/
+
+
+/**
+   AVP Codes.
+   The information here is exported in Json format
+**/
+
+// General
+typedef enum {
+    TIMESTAMP      =  55,
+    AUTH_APP_ID    = 258,
+    VENDOR_SPEC_ID = 260,
+    SESS_ID        = 263,
+    ORIGIN_HOST    = 264,
+    VENDOR_ID      = 266,
+    RES_CODE       = 268,
+    AUTH_SESS_ST   = 277,
+    ORIGIN_ST_ID   = 278,
+    DEST_REALM     = 283,
+    DEST_HOST      = 293,
+    ORIGIN_REALM   = 296
+} avp_code_t;
+
+// 3GPP
+typedef enum {
+    CHARG_ID_3GPP  =   2,
+    PDP_3GPP_TYPE  =   3,
+    SGSN_3GPP_IPv6 =  15,
+    PKT_FILT_3GPP  =  25
+} avp_code_3gpp_t;
+
+// Credit Control
+typedef enum {
+    CC_CORR_ID     = 411,
+    CC_INPUT       = 412,
+    CC_MONEY       = 413,
+    CC_OUTPUT      = 414,
+    CC_REQ_NUM     = 415, // 0 - 3
+    CC_REQ_TYPE    = 416, // 1 - 4
+    CC_TIME        = 420,
+    CC_UNIT_VAL    = 445,
+    CC_CURR_CODE   = 425,
+    SERV_PAR_INFO  = 440,
+    SUBSCR_ID      = 443,
+    VALUE_DGT      = 447,
+    VALID_TIME     = 448,
+    REQ_SERV_UNT   = 437,
+    GRANT_SERV_UNT = 431,
+    USED_SERV_UNT  = 446,
+    MULTI_SERV_CC  = 456,
+    SERV_CONTX_ID  = 461
+} avp_code_credit_control_t;
+
+typedef enum {
+    SIP_ACC_INFO           = 368,
+    SIP_ACC_SRV_URI        = 369,
+    SIP_CC_SRV_URI         = 370,
+    SIP_SRV_URI            = 371,
+    SIP_SRV_CPBL           = 372,
+    SIP_MAN_CPBL           = 373,
+    SIP_OPT_CPBL           = 374,
+    SIP_SRV_TYPE           = 375,
+    SIP_AUTH_DATA          = 376,
+    SIP_AUTH_SCH           = 377,
+    SIP_ITEM_NUM           = 378,
+    SIP_AUTH               = 379,
+    SIP_AUTHORIZ           = 380,
+    SIP_AUTH_INFO          = 381,
+    SIP_NUM_AUTH_IT        = 382,
+    SIP_DEREGISTR          = 383,
+    SIP_REAS_CODE          = 384,
+    SIP_REAS_INFO          = 385,
+    SIP_VISIT_NET_ID       = 386,
+    SIP_USR_AUTH_TYPE      = 387,
+    SIP_SUPP_USR_DATA_TYPE = 388,
+    SIP_USR_DATA           = 389,
+    SIP_USR_DATA_TYPE      = 389,
+    SIP_USR_DATA_CONT      = 391,
+    SIP_USR_DATA_AVAILL    = 392,
+    SIP_METHOD             = 393
+} avp_code_sip_t;
+
+
+/** ############################################################ **/
+/** ############################################################ **/
+/** ############################################################ **/
+
+
+/******** HEADER STRUCUTRE ********/
+// DIAMETER header len
 #define DIAM_HEADER_LEN 20
 
 // DIAMETER header
@@ -68,43 +263,15 @@ struct diameter_header_t
   u_int32_t hop_id;
   u_int32_t end_id;
 };
+/******** *************** ********/
 
-// AVP flags possibile values
+
+/******** AVP STRUCUTRE ********/
 #define AVP_FLAGS_P 0x20
 #define AVP_FLAGS_M 0x40
-
 #define AVP_HEADER_LEN 8
 
-typedef enum {
-
-  SESS_ID        = 263,
-  SERV_CONTX_ID  = 461,
-  SUBSCR_ID      = 443,
-  ORIGIN_HOST    = 264,
-  DEST_HOST      = 293,
-  ORIGIN_REALM   = 296,
-  DEST_REALM     = 283,
-  TIMESTAMP      =  55,
-  VENDOR_ID      = 266,
-  SERV_PAR_INFO  = 440,
-  AUTH_APP_ID    = 258,
-  ORIGIN_ST_ID   = 278,
-  CC_REQ_NUM     = 415, // 0 - 3
-  CC_REQ_TYPE    = 416, // 1 - 4
-  CC_MONEY       = 413,
-  CC_UNIT_VAL    = 445,
-  CC_CODE        = 425,
-  VALUE_DGT      = 447,
-  RES_CODE       = 268,
-  VALID_TIME     = 448,
-  REQ_SERV_UNT   = 437,
-  GRANT_SERV_UNT = 431,
-  USED_SERV_UNT  = 446,
-  MULTI_SERV_CC  = 456
-  /* CHECK IF COMPLETE */
-} avp_block_code;
-
-// AVP HEADER
+// AVP header
 struct avp_header_t
 {
   u_int32_t code;       // 1 - 255 for RADIUS compatibility | > 255 for Diameter
@@ -112,43 +279,46 @@ struct avp_header_t
   u_int8_t  length[3];  /* Values not multiple of four-octets is followed by padding to have 32-bit boundary for the next AVP (if exists) */
 };
 
-// Requested-service-unit struct
-struct req_serv_unit_t
-{
-  struct avp_header_t cc_money_head;   // 413
-  struct avp_header_t cc_unit_val;     // 445
-  struct avp_header_t value_dgt_head;  // 447
-  u_int8_t value_dgt[8];
-  struct avp_header_t cc_code_head;    // 425
-  u_int8_t curr_code[4];
-  /* Maybe incomplete */
-};
 
-// Granted-service-unit struct
-struct grant_serv_unit_t
-{
-  struct avp_header_t cc_money_head;   // 413
-  struct avp_header_t cc_unit_val;     // 445
-  struct avp_header_t value_dgt_head;  // 447
-  u_int8_t value_dgt[8];
-  struct avp_header_t cc_code_head;    // 425
-  u_int8_t curr_code[4];
-  /* Maybe incomplete */
-};
+/* // CREDIT CONTROL */
+/* // Requested-service-unit struct */
+/* struct req_serv_unit_t */
+/* { */
+/*   struct avp_header_t cc_money_head;   // 413 */
+/*   struct avp_header_t cc_unit_val;     // 445 */
+/*   struct avp_header_t value_dgt_head;  // 447 */
+/*   u_int8_t value_dgt[8]; */
+/*   struct avp_header_t cc_code_head;    // 425 */
+/*   u_int8_t curr_code[4]; */
+/*   /\* Maybe incomplete *\/ */
+/* }; */
 
-// Used-service-unit struct
-struct used_serv_unit_t
-{
-  struct avp_header_t cc_money_head;   // 413
-  struct avp_header_t cc_unit_val;     // 445
-  struct avp_header_t value_dgt_head;  // 447
-  u_int8_t value_dgt[8];
-  struct avp_header_t cc_code_head;    // 425
-  u_int8_t curr_code[4];
-  /* Maybe incomplete */
-};
+/* // Granted-service-unit struct */
+/* struct grant_serv_unit_t */
+/* { */
+/*   struct avp_header_t cc_money_head;   // 413 */
+/*   struct avp_header_t cc_unit_val;     // 445 */
+/*   struct avp_header_t value_dgt_head;  // 447 */
+/*   u_int8_t value_dgt[8]; */
+/*   struct avp_header_t cc_code_head;    // 425 */
+/*   u_int8_t curr_code[4]; */
+/*   /\* Maybe incomplete *\/ */
+/* }; */
 
-/* List of ALL the structures for the AVP information block */
+/* // Used-service-unit struct */
+/* struct used_serv_unit_t */
+/* { */
+/*   struct avp_header_t cc_money_head;   // 413 */
+/*   struct avp_header_t cc_unit_val;     // 445 */
+/*   struct avp_header_t value_dgt_head;  // 447 */
+/*   u_int8_t value_dgt[8]; */
+/*   struct avp_header_t cc_code_head;    // 425 */
+/*   u_int8_t curr_code[4]; */
+/*   /\* Maybe incomplete *\/ */
+/* }; */
+/* /\******** *************** ********\/ */
+
+/* List of ALL the structures for the AVP information block TODO: moved to .c*/
 char* session_id;                          // 263
 char* serv_contx_id;                       // 461
 char* org_host;                            // 264
@@ -165,6 +335,8 @@ u_int32_t res_code;                        // 268 ( 2xxx success - else failure)
 struct req_serv_unit_t *req_serv_unit;     // 437
 struct grant_serv_unit_t *grant_serv_unit; // 431
 struct used_serv_unit_t *used_serv_unit;   // 446
-/*** TODO Multiple Service Credit Control (Need more test pkts) ***/
+/*** TODO finish to add fields here ***/
+
+/******** *************** ********/
 
 #endif

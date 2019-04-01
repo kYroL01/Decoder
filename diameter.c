@@ -2,7 +2,7 @@
    DIAMETER dissector
 
    decoder: parsing and classification of traffic
-   Copyright (C) 2016-2019 Michele Campus <fci1908@gmail.com>
+   Copyright (C) 2016-2019 Michele Campus <michelecampus5@gmail.com>
 
    This file is part of decoder.
 
@@ -25,44 +25,68 @@
 #include <byteswap.h>
 #include "diameter.h"
 
+// Macro to check if the k-th bit is set (1) or not (0)
+#define CHECK_BIT(var, k) ((var) & (1<<(k-1)))
 
-// Check packet
-int is_diameter(const u_char *packet, int size_payload)
+// check if the passed variable is a diameter command
+static u_int8_t check_command(u_int16_t com_code) {
+
+    if(com_code == AC || com_code == AS ||
+       com_code == CC || com_code == CE ||
+       com_code == DW || com_code == DP ||
+       com_code == RA || com_code == ST ||
+       com_code == UA || com_code == SA ||
+       com_code == LI || com_code == MA ||
+       com_code == RT || com_code == PP ||
+       com_code == UD || com_code == PU ||
+       com_code == SN || com_code == PN ||
+       com_code == BI || com_code == MP ||
+       com_code == UL || com_code == CL ||
+       com_code == AI || com_code == ID ||
+       com_code == DS || com_code == PE ||
+       com_code == NR || com_code == AM ||
+       com_code == HA)
+        return com_code; // OK
+    else
+        return -1;
+}
+
+
+static u_int8_t is_diameter(const u_char *packet, int size_payload, u_int8_t *R, u_int8_t *com_ret)
 {
+    u_int8_t ret = -1;
+    u_int16_t com_code;
+
     // check param
-    if(!packet || size_payload == 0) return -1;
+    if(!packet || size_payload == 0) return ret;
 
     // cast to diameter header
     struct diameter_header_t *diameter = (struct diameter_header_t *) packet;
 
-    // check if the packet is diameter
-    if(diameter->version == 0x01 &&
-       (diameter->flags == REQUEST ||
-        diameter->flags == PROXYABLE ||
-        diameter->flags == ERROR ||
-        diameter->flags == RETRASM)) {
+    // check if the version is correct
+    if(diameter->version != 0x01) return ret;
 
-        u_int16_t com_code = diameter->com_code[2] + (diameter->com_code[1] << 8) + (diameter->com_code[0] << 8);
+    // check if flag bit R is set to 0 or 1 (answer or request)
+    *R = (CHECK_BIT(diameter->flags, 8)) ? REQ : ANSW;
 
-        if(com_code == AC || com_code == AS ||
-           com_code == CC || com_code == CE ||
-           com_code == DW || com_code == DP ||
-           com_code == RA || com_code == ST)
-            return 1; // OK
-    }
-    // wrong packet
-    return -2;
+    // check command code
+    com_code = diameter->com_code[2] + (diameter->com_code[1] << 8) + (diameter->com_code[0] << 8);
+    *com_ret = check_command(com_code);
+    if(*com_ret != -1) ret = 0;
+
+    return ret;
 }
-
 
 // Parse packet and fill JSON buffer
 int diameter_dissector(const u_char *packet, int size_payload, char *json_buffer, int buffer_len)
 {
-    int offset = 0, js_ret = 0;
+    u_int8_t R, com_ret;
+    int offset = 0, js_ret = 0, ret;
     char buff_tm[30];
 
-    int ret = is_diameter(packet, size_payload);
-    if(ret != 1) return -1; // invalid params
+    // check if packet is diameter
+    ret = is_diameter(packet, size_payload, &R, &com_ret);
+    if(ret == -1) return -1;
 
     // cast to diameter header
     struct diameter_header_t *diameter = (struct diameter_header_t *) packet;
@@ -81,8 +105,8 @@ int diameter_dissector(const u_char *packet, int size_payload, char *json_buffer
     pp = pp + DIAM_HEADER_LEN;
 
     /**
-       Create json buffer: it's created dinamically because it's impossibile determine a static format (not all the same fields are present in a Diameter packet
-    */
+       Create json buffer
+    **/
     js_ret += snprintf((json_buffer + js_ret), buffer_len, "{ \"diameter_report_information\":{ ");
 
     while(offset < length) {
@@ -526,7 +550,7 @@ int diameter_dissector(const u_char *packet, int size_payload, char *json_buffer
 
             // put buffer in JSON buffer
             js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                               REQ_SERV_UNT_JSON, req_value_dgt, req_currency_code);
+                               REQ_SERV_JSON, req_value_dgt, req_currency_code);
 
             /* printf("json_buffer = %s\n", json_buffer); */
             break;
@@ -544,7 +568,7 @@ int diameter_dissector(const u_char *packet, int size_payload, char *json_buffer
 
             // put buffer in JSON buffer
             js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                               GRANT_SERV_UNT_JSON, grant_value_dgt, grant_currency_code);
+                               GRANT_SERV_JSON, grant_value_dgt, grant_currency_code);
             /* printf("json_buffer = %s\n", json_buffer); */
             break;
 
@@ -561,7 +585,7 @@ int diameter_dissector(const u_char *packet, int size_payload, char *json_buffer
 
             // put buffer in JSON buffer
             js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                               USED_SERV_UNT_JSON, used_value_dgt, used_currency_code);
+                               USED_SERV_JSON, used_value_dgt, used_currency_code);
 
             /* printf("json_buffer = %s\n", json_buffer); */
             break;
