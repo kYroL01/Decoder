@@ -283,8 +283,6 @@ struct avp_header_t
     u_int8_t  length[3];  /* Values not multiple of four-octets is followed by padding to have 32-bit boundary for the next AVP (if exists) */
 };
 
-
-
 /* // CREDIT CONTROL */
 /* // Requested-service-unit struct */
 /* struct req_serv_unit_t */

@@ -29,10 +29,10 @@
 #define CHECK_BIT(var, k) ((var) & (1<<(k-1)))
 
 /* Array of string definition for commands (used for convertion from enum to string) */
-static const char* com_diam_base_arr[] = { "AC", "AS", "CE", "DW", "DP", "RA", "ST"};
-static const char* com_diam_3gpp_arr[] = { "UA", "SA", "LI", "MA", "RT", "PP", "UD", "PU", "SN", "PN", "BI", "MP", "UL", "CL", "AI", "ID", "DS", "PE", "NO", "EC"};
-static const char* com_diam_CC_arr[] = { "CC"};
-static const char* com_diam_sip_arr[] = { "UA", "SA", "LI", "MA", "RT", "PP"};
+static const char* com_diam_base_arr[] = { "AC", "AS", "CE", "DW", "DP", "RA", "ST" };
+static const char* com_diam_3gpp_arr[] = { "UA", "SA", "LI", "MA", "RT", "PP", "UD", "PU", "SN", "PN", "BI", "MP", "UL", "CL", "AI", "ID", "DS", "PE", "NO", "EC" };
+static const char* com_diam_CC_arr[]   = { "CC" };
+static const char* com_diam_sip_arr[]  = { "UA", "SA", "LI", "MA", "RT", "PP" };
 
 /**
    check if the passed variable is a diameter command
@@ -47,14 +47,12 @@ static int check_command(u_int16_t com_code, const char* com_string) {
     // check for CC command
     if(com_code == CCC) {
         snprintf(com_string, 3, "CC");
-        printf("com string = %s\n", com_string);
         return CC;
     }
     // check for DIAM_BASE command
     for (i = AC, j = 0; i <= ST; i++, j++) {
         if(i == com_code) {
             snprintf(com_string, 3, "%s", com_diam_base_arr[j]);
-            printf("com string = %s\n", com_string);
             return DIAM_BASE;
         }
     }
@@ -63,7 +61,6 @@ static int check_command(u_int16_t com_code, const char* com_string) {
         if(i == com_code) {
             /* printf("string = %s\n", com_diam_base_arr[j]); */
             snprintf(com_string, 3, "%s", com_diam_3gpp_arr[j]);
-            printf("com string = %s\n", com_string);
             return _3GPP;
         }
     }
@@ -71,7 +68,6 @@ static int check_command(u_int16_t com_code, const char* com_string) {
     for (i = UAS, j = 0; i <= PPS; i++, j++) {
         if(i == com_code) {
             snprintf(com_string, 3, "%s", com_diam_sip_arr[j]);
-            printf("com string = %s\n", com_string);
             return SIP;
         }
     }
