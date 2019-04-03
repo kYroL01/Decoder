@@ -29,11 +29,9 @@
 #include <time.h>
 
 /* Definition of Diameter common info JSON */
-#define DIAMETER_BEGIN_JSON "\"diameter_info\": {"
-#define DIAMETER_HEADER_JSON "[\"request\":%u,\"answer\":%u,\"command\":%u,\"app-ID\":%u,\"hop-to-hop-ID\":%u,\"end-to-end-ID\":%u],"
-#define DIAMETER_END_JSON "}"
+#define DIAMETER_HEADER_JSON "\"diameter_info\": { [\"class\":\"%s\",\"type\":\"%s\",\"command\":\"%s\",\"app-ID\":%d] }"
 
-/* Definition of AVPs JSON */
+/* Definition of AVPs JSON TODO */
 // Basic DIAMETER
 
 // 3GPP DIAMETER
@@ -41,11 +39,11 @@
 // SIP DIAMETER
 
 // CREDIT CONTROL
-#define SUBSCR_ID_JSON "\"subscription-ID\":{\"Subscription-ID-data\":%s, \"Subscription-ID-type\":%u}, "
-#define SERV_PARAM_JSON "\"service-parameter-info\":{\"Service-parameter-type\":%u, \"Service-parameter-value\":%s}, "
-#define REQ_SERV_JSON "\"requested-service\":{\"Value-digits\":%lu, \"Currency-code\":%u}, "
-#define GRANT_SERV_JSON "\"granted-service\":{\"Value-digits\":%lu, \"Currency-code\":%u}, "
-#define USED_SERV_JSON "\"used-service\":{\"Value-digits\":%lu, \"Currency-code\":%u}, "
+/* #define SUBSCR_ID_JSON "\"subscription-ID\":{\"Subscription-ID-data\":%s, \"Subscription-ID-type\":%u}, " */
+/* #define SERV_PARAM_JSON "\"service-parameter-info\":{\"Service-parameter-type\":%u, \"Service-parameter-value\":%s}, " */
+/* #define REQ_SERV_JSON "\"requested-service\":{\"Value-digits\":%lu, \"Currency-code\":%u}, " */
+/* #define GRANT_SERV_JSON "\"granted-service\":{\"Value-digits\":%lu, \"Currency-code\":%u}, " */
+/* #define USED_SERV_JSON "\"used-service\":{\"Value-digits\":%lu, \"Currency-code\":%u}, " */
 
 #define JSON_BUFFER_LEN 5000
 
@@ -55,18 +53,25 @@
 /* #define ERROR     0X20 */
 /* #define RETRASM   0X10 */
 
-#define REQ  1
-#define ANSW 0
+#define UNK      -1
+// Flags
+#define REQ       1
+#define ANSW      0
+// Classes
+#define DIAM_BASE 0
+#define _3GPP     1
+#define SIP       2
+#define CC        3
 
 /** ############################## COMMANDS ############################## **/
 
 /**
+   A Command Code is used to determine the action that is to be taken for a particular message.
    Each command Request/Answer pair is assigned a command code.
 **/
-// Base
+// Diameter protocol base
 typedef enum {
     AC = 271,
-    CC = 272, // Credit control
     AS = 274,
     CE = 257,
     DW = 280,
@@ -99,46 +104,47 @@ typedef enum {
     PE = 321,
     NO = 323,
     EC = 324
-} com_diam_3GPP_t;
+} com_diam_3gpp_t;
 
-// Mobile
+// Credit control
 typedef enum {
-    AM = 260,
-    HA = 262
-} com_diam_mobile_t;
+    CCC = 272
+} com_diam_CC_t;
 
 // SIP
 typedef enum {
-    UA = 283,
-    SA = 284,
-    LI = 285,
-    MA = 286,
-    RT = 287,
-    PP = 288
+    UAS  = 283,
+    SAS  = 284,
+    LIS  = 285,
+    MAS  = 286,
+    RTS  = 287,
+    PPS  = 288
 } com_diam_sip_t;
 
 
 /** ############################## APPLICATION-ID ############################## **/
 
 /**
-   Application-ID is used to identify for which Diameter application the message is applicable.
+   Application-ID is used to identify for which Diameter application the message is belong to.
    The application can be an authentication application, an accounting application, or a vendor-specific application.
 **/
+// Diameter protocol base (establishment/teardown/maintenance)
 typedef enum {
     COMMON_MSG  = 0,
     NASREQ      = 1,
     BASE_ACC    = 3,
-    CREDIT_CTRL = 4,
-    SIP         = 6,
+    CREDIT_CTRL = 4,         // CREDIT CONTROL
+    SIP_ID      = 6,         // SIP
     QOS         = 9,
     NAT_CA      = 12,
     ERP         = 13
     /* add more if necessary */
 } diam_app_id_t;
 
+// 3GPP protocol
 typedef enum {
-    _3GPP_CX    = 16777216,     // IMS I/S-CSCF to HSS interface
-    _3GPP_SH    = 16777217,     // VoIP/IMS SIP Application Server to HSS interface
+    _3GPP_CX    = 16777216,  // IMS I/S-CSCF to HSS interface
+    _3GPP_SH    = 16777217,  // VoIP/IMS SIP Application Server to HSS interface
     _3GPP_RE    = 16777218,
     _3GPP_WX    = 16777219,
     _3GPP_ZN    = 16777220,
@@ -149,12 +155,12 @@ typedef enum {
     _3GPP_GXoGY = 16777225,
     _3GPP_MM10  = 16777226,
     _3GPP_PR    = 16777230,
-    _3GPP_RX    = 16777236,     // Policy and charging control
+    _3GPP_RX    = 16777236,  // Policy and charging control
+    _3GPP_S6t   = 16777345,   // Interface between SCEF and HSS
     _3GPP_Sta   = 16777250,
-    _3GPP_S6ad  = 16777251,     // LTE Roaming signaling
-    _3GPP_S13   = 16777252,     // Interface between EIR and MME
-    _3GPP_SLg   = 16777255,     // Location services
-    _3GPP_SLg   = 16777345      // Interface between SCEF and HSS
+    _3GPP_S6ad  = 16777251,  // LTE Roaming signaling
+    _3GPP_S13   = 16777252,  // Interface between EIR and MME
+    _3GPP_SLg   = 16777255   // Location services
     /* add more if necessary */
 } diam_3gpp_app_id_t;
 
@@ -167,7 +173,7 @@ typedef enum {
    The information here is exported in Json format
 **/
 
-// General
+// Diameter protocol base
 typedef enum {
     TIMESTAMP      =  55,
     AUTH_APP_ID    = 258,
@@ -213,6 +219,7 @@ typedef enum {
     SERV_CONTX_ID  = 461
 } avp_code_credit_control_t;
 
+// SIP
 typedef enum {
     SIP_ACC_INFO           = 368,
     SIP_ACC_SRV_URI        = 369,
@@ -248,25 +255,22 @@ typedef enum {
 /** ############################################################ **/
 
 
-/******** HEADER STRUCUTRE ********/
-// DIAMETER header len
+/******** HEADER STRUCUTRES ********/
+
 #define DIAM_HEADER_LEN 20
 
 // DIAMETER header
 struct diameter_header_t
 {
-  u_int8_t  version;
-  u_int8_t  length[3];
-  u_int8_t  flags;
-  u_int8_t  com_code[3];
-  u_int32_t app_id;
-  u_int32_t hop_id;
-  u_int32_t end_id;
+    u_int8_t  version;
+    u_int8_t  length[3];
+    u_int8_t  flags;
+    u_int8_t  com_code[3];
+    u_int8_t  app_id[4];
+    u_int32_t hop_id;
+    u_int32_t end_id;
 };
-/******** *************** ********/
 
-
-/******** AVP STRUCUTRE ********/
 #define AVP_FLAGS_P 0x20
 #define AVP_FLAGS_M 0x40
 #define AVP_HEADER_LEN 8
@@ -274,10 +278,11 @@ struct diameter_header_t
 // AVP header
 struct avp_header_t
 {
-  u_int32_t code;       // 1 - 255 for RADIUS compatibility | > 255 for Diameter
-  u_int8_t  flag;
-  u_int8_t  length[3];  /* Values not multiple of four-octets is followed by padding to have 32-bit boundary for the next AVP (if exists) */
+    u_int32_t code;       // 1 - 255 for RADIUS compatibility | > 255 for Diameter
+    u_int8_t  flag;
+    u_int8_t  length[3];  /* Values not multiple of four-octets is followed by padding to have 32-bit boundary for the next AVP (if exists) */
 };
+
 
 
 /* // CREDIT CONTROL */

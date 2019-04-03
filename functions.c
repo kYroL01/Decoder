@@ -344,7 +344,7 @@ static unsigned int process_packet(const u_char * payload,
         // proto L3
         flow_key->proto_id_l3 = proto_id_l3;
 
-        // Call TLS dissector function
+        /* Call TLS dissector function */
         ret = tls_dissector(&payload,
                             size_payload,
                             ip_version,
@@ -355,7 +355,7 @@ static unsigned int process_packet(const u_char * payload,
                             save);
         /* HT_Flows */
         if(ret == -1) {
-            fprintf(stderr, "error on tls_packet_dissector\n");
+            fprintf(stderr, "Not a TLS packet\n");
             // free structs
             free(flow_key);
             free(handshake);
@@ -374,7 +374,7 @@ static unsigned int process_packet(const u_char * payload,
                                  json_buffer,
                                  JSON_BUFFER_LEN);
         if(ret == -1) {
-            fprintf(stderr, "error on diameter_dissector\n");
+            fprintf(stderr, "Not a diameter packet\n");
         }
 
         /* Print JSON buffer */
@@ -720,12 +720,12 @@ void callback_proto(u_char *args, const struct pcap_pkthdr *pkt_header, const u_
                            fcp,
                            s
                            /* HT_Flows */);
-    if(check == 0) {
+    if(check == -1) { //TODO FIX
         printf("TLS/SSL packet founded and parsed\n");
         fcp->stats.num_tls_pkts++;
         print_HashTable(ip_version);
     }
-    else if(check == 2) {
+    else if(check == 0) {
         printf("DIAMETER Protocol founded and parsed\n");
         fcp->stats.num_diameter_pkts++;
     }
