@@ -255,9 +255,10 @@ typedef enum {
 /** ############################################################ **/
 
 
-/******** HEADER STRUCUTRES ********/
+/******** STRUCUTRES ********/
 
 #define DIAM_HEADER_LEN 20
+#define AVP_HEADER_LEN 8
 
 // DIAMETER header
 struct diameter_header_t
@@ -273,7 +274,6 @@ struct diameter_header_t
 
 #define AVP_FLAGS_P 0x20
 #define AVP_FLAGS_M 0x40
-#define AVP_HEADER_LEN 8
 
 // AVP header
 struct avp_header_t

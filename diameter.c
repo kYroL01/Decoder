@@ -121,6 +121,9 @@ int diameter_dissector(const u_char *packet, int size_payload, char *json_buffer
     // string for JSON command and app IDs
     const char com_string[5] = {0};
     const char app_string[5] = {0};
+    // start and end pointers
+    const u_char *start;
+    const u_char *end;
 
     // check param
     if(!packet || size_payload == 0) {
@@ -191,40 +194,48 @@ int diameter_dissector(const u_char *packet, int size_payload, char *json_buffer
         return -1;
     }
 
+    // set "start" and "end" pointer to begin and end of the payload pkt
+    const u_char *start = packet;
+    const u_char *end = packet + (length-1);
 
-    /* // pointer used to move through the pkt */
-    /* const u_char *pp = packet; */
+    // move to AVPs
+    start = start + DIAM_HEADER_LEN;
 
-    /* // increment offset */
-    /* offset += DIAM_HEADER_LEN; */
+    // increment offset
+    offset += DIAM_HEADER_LEN;
 
-    /* // move the pointer forward */
-    /* pp = pp + DIAM_HEADER_LEN; */
+    /**
+       Create json buffer
+    **/
+    js_ret += snprintf((json_buffer + js_ret), buffer_len, "{ \"diameter_report_information\":{ ");
 
-    /* /\** */
-    /*    Create json buffer */
-    /* **\/ */
-    /* js_ret += snprintf((json_buffer + js_ret), buffer_len, "{ \"diameter_report_information\":{ "); */
+    while(start < end && offset < length) {
 
-    /* while(offset < length) { */
+        // Info from AVP headers
+        u_int32_t avp_code;
+        u_int8_t  flag;
+        u_int16_t avp_len;
+        u_int16_t l;
+        u_int8_t  padd = 0;
+        u_int8_t  is_vendor = 0;
 
-    /*     // Info from AVP headers */
-    /*     u_int32_t avp_code; */
-    /*     u_int16_t avp_len; */
-    /*     u_int16_t l; */
-    /*     u_int8_t padd = 0; */
+        // Header AVP
+        struct avp_header_t *avp = (struct avp_header_t *) start;
 
-    /*     // Header AVP */
-    /*     struct avp_header_t *avp = (struct avp_header_t *) pp; */
+        // calculate AVP code
+        avp_code = ntohl(avp->code);
+        // calculate AVP length
+        avp_len = avp->length[2] + (avp->length[1] << 8) + (avp->length[0] << 8);
 
-    /*     // calculate AVP code */
-    /*     avp_code = ntohl(avp->code); */
-    /*     // calculate AVP length */
-    /*     avp_len = avp->length[2] + (avp->length[1] << 8) + (avp->length[0] << 8); */
+        // search the presence of Vendor-ID field (optional)
+        if(CHECK_BIT(avp->flag, 8) == 1) is_vendor = 1;
 
-    /*     // search the presence of Vendor-ID field (optional) */
-    /*     if(avp->flag != AVP_FLAGS_P && avp->flag != AVP_FLAGS_M) */
-    /*         pp = pp + 4; */
+
+            /* pp = pp + 4; */
+            /* TODO */
+
+            /* TODO JSON FILL */
+
 
     /*     switch(avp_code) { */
 
@@ -694,9 +705,9 @@ int diameter_dissector(const u_char *packet, int size_payload, char *json_buffer
     /*     default: return -3; // error: avp->code unknown */
 
     /*     } */
-    /* } */
+    }
 
-    /* js_ret += snprintf((json_buffer + js_ret - 2), (buffer_len - js_ret + 1), "}}"); */
+    js_ret += snprintf((json_buffer + js_ret - 2), (buffer_len - js_ret + 1), " }");
 
     return 0; // OK
 }
