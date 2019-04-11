@@ -26,7 +26,6 @@
 #include <endian.h>
 #include <net/ethernet.h>
 #include <arpa/inet.h>
-#include <time.h>
 
 /* Definition of Diameter common info JSON */
 #define DIAMETER_HEADER_JSON "\"diameter_info\": { [\"class\":\"%s\",\"type\":\"%s\",\"command\":\"%s\",\"app-ID\":%d] }"
@@ -175,18 +174,18 @@ typedef enum {
 
 // Diameter protocol base
 typedef enum {
-    TIMESTAMP      =  55,
-    AUTH_APP_ID    = 258,
-    VENDOR_SPEC_ID = 260,
-    SESS_ID        = 263,
-    ORIGIN_HOST    = 264,
-    VENDOR_ID      = 266,
-    RES_CODE       = 268,
-    AUTH_SESS_ST   = 277,
-    ORIGIN_ST_ID   = 278,
-    DEST_REALM     = 283,
-    DEST_HOST      = 293,
-    ORIGIN_REALM   = 296
+    TIMESTAMP      =  55, //
+    AUTH_APP_ID    = 258, //
+    VENDOR_SPEC_ID = 260, //
+    SESS_ID        = 263, //
+    ORIGIN_HOST    = 264, //
+    VENDOR_ID      = 266, //
+    RES_CODE       = 268, //
+    AUTH_SESS_ST   = 277, //
+    ORIGIN_ST_ID   = 278, //
+    DEST_REALM     = 283, //
+    DEST_HOST      = 293, //
+    ORIGIN_REALM   = 296  //
 } avp_code_t;
 
 // 3GPP
@@ -322,19 +321,11 @@ struct avp_header_t
 /* /\******** *************** ********\/ */
 
 /* List of ALL the structures for the AVP information block TODO: moved to .c*/
-char* session_id;                          // 263
 char* serv_contx_id;                       // 461
-char* org_host;                            // 264
-char* dst_host;                            // 293
-char* org_realm;                           // 296
-char* dst_realm;                           // 283
-time_t tm;                                 //  55
-u_int32_t auth_app_id;                     // 258
 u_int32_t cc_req_num;                      // 415
 u_int32_t cc_req_type;                     // 416 (1 - 4)
 u_int32_t org_state_id;                    // 278
 u_int32_t valid_time;                      // 448
-u_int32_t res_code;                        // 268 ( 2xxx success - else failure)
 struct req_serv_unit_t *req_serv_unit;     // 437
 struct grant_serv_unit_t *grant_serv_unit; // 431
 struct used_serv_unit_t *used_serv_unit;   // 446
