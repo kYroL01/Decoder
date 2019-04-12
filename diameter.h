@@ -1,7 +1,6 @@
 /**
    DIAMETER dissector
 
-   decoder -
    Copyright (C) 2016-2019 Michele Campus <michelecampus5@gmail.com>
 
    This file is part of decoder.
@@ -18,14 +17,17 @@
    You should have received a copy of the GNU General Public License along with
    decoder. If not, see <http://www.gnu.org/licenses/>.
 **/
-#ifndef PARSER_DIAMETER_H
-#define PARSER_DIAMETER_H
+#ifndef DIAMETER_H
+#define DIAMETER_H
 
-#include <string.h>
+#include <stdio.h>
 #include <stdlib.h>
-#include <endian.h>
+#include <string.h>
 #include <net/ethernet.h>
 #include <arpa/inet.h>
+#include <byteswap.h>
+#include <endian.h>
+#include <time.h>
 
 /* Definition of Diameter common info JSON */
 #define DIAMETER_HEADER_JSON "\"diameter_info\": { [\"class\":\"%s\",\"type\":\"%s\",\"command\":\"%s\",\"app-ID\":%d] }"
@@ -321,15 +323,15 @@ struct avp_header_t
 /* /\******** *************** ********\/ */
 
 /* List of ALL the structures for the AVP information block TODO: moved to .c*/
-char* serv_contx_id;                       // 461
-u_int32_t cc_req_num;                      // 415
-u_int32_t cc_req_type;                     // 416 (1 - 4)
-u_int32_t org_state_id;                    // 278
-u_int32_t valid_time;                      // 448
-struct req_serv_unit_t *req_serv_unit;     // 437
-struct grant_serv_unit_t *grant_serv_unit; // 431
-struct used_serv_unit_t *used_serv_unit;   // 446
-/*** TODO finish to add fields here ***/
+/* char* serv_contx_id;                       // 461 */
+/* u_int32_t cc_req_num;                      // 415 */
+/* u_int32_t cc_req_type;                     // 416 (1 - 4) */
+/* u_int32_t org_state_id;                    // 278 */
+/* u_int32_t valid_time;                      // 448 */
+/* struct req_serv_unit_t *req_serv_unit;     // 437 */
+/* struct grant_serv_unit_t *grant_serv_unit; // 431 */
+/* struct used_serv_unit_t *used_serv_unit;   // 446 */
+/* /\*** TODO finish to add fields here ***\/ */
 
 /******** *************** ********/
 

@@ -1,7 +1,6 @@
 /**
    DIAMETER dissector
 
-   decoder: parsing and classification of traffic
    Copyright (C) 2016-2019 Michele Campus <michelecampus5@gmail.com>
 
    This file is part of decoder.
@@ -18,12 +17,6 @@
    You should have received a copy of the GNU General Public License along with
    decoder. If not, see <http://www.gnu.org/licenses/>.
 **/
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <arpa/inet.h>
-#include <byteswap.h>
-#include <time.h>
 #include "diameter.h"
 
 // Macro to check if the k-th bit is set (1) or not (0)
@@ -123,7 +116,7 @@ static int check_appID(u_int32_t app_id) {
    @return 0 if pkt is diameter and JSON buffer is created
    @return -1 in case of errors
 **/
-int diameter_dissector(const u_char *packet, int size_payload, char *json_buffer, int buffer_len)
+int diameter_parser(const u_char *packet, int size_payload, char *json_buffer, int buffer_len)
 {
     int offset = 0, js_ret = 0, ret;
     // header field var for JSON

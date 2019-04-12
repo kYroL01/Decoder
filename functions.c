@@ -30,7 +30,6 @@
 #include "functions.h"
 #include "structures.h"
 #include "uthash.h"
-#include "ngcp.h"
 
 #define JSON_BUFFER_LEN 5000
 
@@ -194,7 +193,7 @@ static unsigned int process_packet(const u_char * payload,
            check for NGCP protocol
         */
         struct msg_fake_sip *msg_sf;
-        msg_sf = check_ngcp(payload, size_payload);
+        msg_sf = ngcp_parser(payload, size_payload);
         if(msg_sf)
         {
             // print fields
@@ -219,7 +218,7 @@ static unsigned int process_packet(const u_char * payload,
             printf("\n-------------------- --- ---- --- -------------------- \n");
             printf("\n-------------------- --- ---- --- -------------------- \n");
             printf("\033[0m");
-            ret = 3;
+            ret = 2;
             goto end;
         }
 
@@ -245,10 +244,10 @@ static unsigned int process_packet(const u_char * payload,
         char* json_buffer = malloc(sizeof(char) * JSON_BUFFER_LEN);
 
         // dissect
-        ret = rtcp_dissector(payload,
-                             size_payload,
-                             json_buffer,
-                             JSON_BUFFER_LEN);
+        ret = rtcp_parser(payload,
+                          size_payload,
+                          json_buffer,
+                          JSON_BUFFER_LEN);
         if(ret == -1)
             fprintf(stderr, "error on rtcp_dissector\n");
 
@@ -261,7 +260,7 @@ static unsigned int process_packet(const u_char * payload,
         free(json_buffer);
 
         // return code for RTCP
-        ret = 4;
+        ret = 1;
     }
 
     /* ################# */
@@ -269,11 +268,35 @@ static unsigned int process_packet(const u_char * payload,
     /* ################# */
     else {
 
+        // declare JSON buffer
+        char* json_buffer = malloc(sizeof(char) * JSON_BUFFER_LEN);
+
+        /**
+           Check RTSP dissector
+        */
+        memset(json_buffer, 0, JSON_BUFFER_LEN);
+
+        // Call DIAMETER dissector function
+        ret = rtsp_parser(payload,
+                          size_payload,
+                          json_buffer,
+                          JSON_BUFFER_LEN);
+        if(ret == -1) {
+            fprintf(stderr, "Not an rtsp packet\n");
+        }
+        else {
+            ret = 5;
+            /* Print JSON buffer */
+            /* printf("%s\n", json_buffer); */
+            goto end;
+        }
+
+
         /**
            Check TLS dissector
         */
 
-        char* json_buffer = malloc(sizeof(char) * JSON_BUFFER_LEN);
+        memset(json_buffer, 0, JSON_BUFFER_LEN);
 
         struct Flow_key  *flow_key  = NULL;
         struct Handshake *handshake = NULL;
@@ -345,20 +368,24 @@ static unsigned int process_packet(const u_char * payload,
         flow_key->proto_id_l3 = proto_id_l3;
 
         /* Call TLS dissector function */
-        ret = tls_dissector(&payload,
-                            size_payload,
-                            ip_version,
-                            flow_key,
-                            src_port,
-                            dst_port,
-                            proto_id_l3,
-                            save);
+        ret = tls_parser(&payload,
+                         size_payload,
+                         ip_version,
+                         flow_key,
+                         src_port,
+                         dst_port,
+                         proto_id_l3,
+                         save);
         /* HT_Flows */
         if(ret == -1) {
             fprintf(stderr, "Not a TLS packet\n");
             // free structs
             free(flow_key);
             free(handshake);
+        }
+        else {
+            ret = 4;
+            goto end;
         }
 
 
@@ -369,16 +396,18 @@ static unsigned int process_packet(const u_char * payload,
         memset(json_buffer, 0, JSON_BUFFER_LEN);
 
         // Call DIAMETER dissector function
-        ret = diameter_dissector(payload,
+        ret = diameter_parser(payload,
                                  size_payload,
                                  json_buffer,
                                  JSON_BUFFER_LEN);
         if(ret == -1) {
             fprintf(stderr, "Not a diameter packet\n");
         }
-
-        /* Print JSON buffer */
-        printf("%s\n", json_buffer);
+        else {
+            ret = 3;
+            /* Print JSON buffer */
+            printf("%s\n", json_buffer);
+        }
     }
  end:
     return ret;
@@ -720,22 +749,26 @@ void callback_proto(u_char *args, const struct pcap_pkthdr *pkt_header, const u_
                            fcp,
                            s
                            /* HT_Flows */);
-    if(check == -1) { //TODO FIX
+    if(check == 4) { //TODO FIX
         printf("TLS/SSL packet founded and parsed\n");
         fcp->stats.num_tls_pkts++;
         print_HashTable(ip_version);
     }
-    else if(check == 0) {
+    else if(check == 3) {
         printf("DIAMETER Protocol founded and parsed\n");
         fcp->stats.num_diameter_pkts++;
     }
-    else if(check == 3) {
+    else if(check == 2) {
         printf("NGCP Protocol founded and parsed\n");
         fcp->stats.num_ngcp_pkts++;
     }
-    else if(check == 4) {
+    else if(check == 1) {
         printf("RTCP Protocol founded and parsed\n");
         fcp->stats.num_rtcp_pkts++;
+    }
+    else if(check == 5) {
+        printf("RTSP Protocol founded and parsed\n");
+        fcp->stats.num_rtsp_pkts++;
     }
     else {
         printf("\n\t Other protocol L4\n\n");
@@ -768,6 +801,7 @@ void print_stats(struct flow_callback_proto * fcp)
     printf(" # RTCP pkts                   = %d\n",   fcp->stats.num_rtcp_pkts);
     printf(" # DIAMETER pkts               = %d\n",   fcp->stats.num_diameter_pkts);
     printf(" # NGCP pkts                   = %d\n",   fcp->stats.num_ngcp_pkts);
+    printf(" # RTSP pkts                   = %d\n",   fcp->stats.num_rtsp_pkts);
     printf("\033[0m");
 
     printf(" ---------- ------------------ ----------\n\n");

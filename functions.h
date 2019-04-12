@@ -28,6 +28,7 @@
 #include "diameter.h"
 #include "rtcp.h"
 #include "ngcp.h"
+#include "rtsp.h"
 
 /* global variable to represent SIGINT signal */
 extern volatile sig_atomic_t signal_flag;
@@ -64,15 +65,15 @@ void delete_all_Flows();
 /**
    Function for TLS dissection
 **/
-int tls_dissector(const u_char ** payload,
-			 const u_int16_t size_payload,
-			 const u_int8_t ip_version,
-			 struct Flow_key * flow_key,
-			 const u_int16_t src_port,
-			 const u_int16_t dst_port,
-			 const u_int8_t proto_id_l3,
-			 u_int8_t s
-			 /* struct Hash_Table ** HT_Flows */);
+int tls_parser(const u_char ** payload,
+               const u_int16_t size_payload,
+               const u_int8_t ip_version,
+               struct Flow_key * flow_key,
+               const u_int16_t src_port,
+               const u_int16_t dst_port,
+               const u_int8_t proto_id_l3,
+               u_int8_t s
+               /* struct Hash_Table ** HT_Flows */);
 
 
 /**
@@ -81,7 +82,7 @@ int tls_dissector(const u_char ** payload,
 // Check version
 int check_rtcp_version(const u_char *packet, int size_payload);
 // Dissect packet
-int rtcp_dissector(const u_char *packet,
+int rtcp_parser(const u_char *packet,
                    int size_payload,
                    char *json_buffer,
                    int buffer_len);
@@ -102,10 +103,8 @@ int rtcpxr_dissector(const u_char *packet,
 /**
    Functions for DIAMETER dissection
 **/
-// Check packet
-int is_diameter(const u_char *packet, int size_payload);
 // Parse packet and fill JSON buffer
-int diameter_dissector(const u_char *packet,
+int diameter_parser(const u_char *packet,
                        int size_payload,
                        char *json_buffer,
                        int buffer_len);
@@ -114,9 +113,13 @@ int diameter_dissector(const u_char *packet,
 /**
    Functions for NGCP dissection
 **/
-struct msg_fake_sip * check_ngcp(const u_char * payload,
-                                 const u_int16_t size_payload);
+struct msg_fake_sip * ngcp_parser(const u_char * payload,
+                                  const u_int16_t size_payload);
 
+/**
+   Functions for RTSP dissection
+**/
+int rtsp_parser(const u_char *packet, int size_payload, char *json_buffer, int buffer_len);
 
 
 #endif
