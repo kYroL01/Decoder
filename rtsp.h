@@ -27,8 +27,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define IS_HEADER_FIELD 0
-
 #define RTSP_SUCCESS 0
 #define RTSP_ERROR_NO_MEMORY -1
 #define RTSP_ERROR_MALFORMED -2
@@ -127,21 +125,32 @@
    WWW-Authenticate     r      opt.      all
 */
 
-// NEW STRUCT TODO: put in .h
 typedef struct _RTSP_MESSAGE {
-    char flags;
+    char *cache_control;
+    char *content_base;
+    char *content_len;
+    char *content_type;
+    char *command;
+    char *last_mod;
+    char *range;
     char *protocol;
+    char *seq_num;
+    char *server;
+    char *session;
+    char *status_code;
+    char *transport;
+    char *ua;
     char *uri;
-    char *sequence;
-    char *header_field_name;
-    char *header_field_val;
-    /* TODO list not finished: see the RFC */
-    char *sdp; //
+    char msg_type;
+    /* list not complete: add new in needed */
+    char *sdp;
 } rtsp_message;
 
+/* Prototype of functions */
 int rtsp_message_parser(rtsp_message *msg, char *rtspMessage, int length);
-void create_rtsp_message(rtsp_message *msg, char *messageBuffer, int flags, char *protocol, int statusCode, char *statusString, int sequenceNumber, poption_item *optionsHead, char *payload, int payloadLength);
-/* void create_rtsp_response(prtsp_message msg, char *messageBuffer, int flags, char *protocol, int statusCode, char *statusString, int sequenceNumber, poption_item *optionsHead, char *payload, int payloadLength); */
-/* void create_rtsp_request(prtsp_message msg, char *messageBuffer, int flags, char *command, char *target, char *protocol, int sequenceNumber, poption_item *optionsHead, char *payload, int payloadLength); */
+void create_rtsp_message(rtsp_message *msg, char *protocol, char *uri, char *command, char *seq_num,
+                         char *status_code, char *server, char *ua, char *cache_control, char *content_len,
+                         char *content_type, char *content_base, char *last_mod, char *range, char *session,
+                         char *transport, char msg_type, char *sdp);
 
 #endif

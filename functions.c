@@ -276,7 +276,7 @@ static unsigned int process_packet(const u_char * payload,
         */
         memset(json_buffer, 0, JSON_BUFFER_LEN);
 
-        // Call DIAMETER dissector function
+        // Call RTSP dissector function
         ret = rtsp_parser(payload,
                           size_payload,
                           json_buffer,

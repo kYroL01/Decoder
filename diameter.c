@@ -245,7 +245,7 @@ int diameter_parser(const u_char *packet, int size_payload, char *json_buffer, i
             vendor_id = start[3] + (start[2] << 8) + (start[1] << 8) + (start[0] << 8);
             // put buffer in JSON buffer
             js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                               "\"vendor-ID\":%s, ", vendor_id);
+                               "\"vendor-ID\":%u, ", vendor_id);
             start += 4;
             offset += 4;
         }

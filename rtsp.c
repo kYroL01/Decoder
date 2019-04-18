@@ -28,56 +28,13 @@
 // Check if String s begins with the given prefix
 static int starts_with(const char *s, const char *prefix) {
 
-    if (strncmp(s, prefix, strlen(prefix)) == 0)
+    if(strncmp(s, prefix, strlen(prefix)) == 0)
         return 1;
     else
         return 0;
 }
 
-/* // Gets the length of the message */
-/* static int get_message_length(prtsp_message msg) { */
-/*     poption_item *current; */
-
-/*     // Initialize to 1 for null terminator */
-/*     size_t count = 1; */
-
-/*     // Add the length of the protocol */
-/*     count += strlen(msg->protocol); */
-
-/*     // Add length of request-specific strings */
-/*     if (msg->type == REQUEST) { */
-/*         count += strlen(msg->message.request.command); */
-/*         count += strlen(msg->message.request.uri); */
-/*         // two spaces and \r\n */
-/*         count += MESSAGE_END_LENGTH; */
-/*     } */
-/*     // Add length of response-specific strings */
-/*     else { */
-/*         char statusCodeStr[16]; */
-/*         sprintf(statusCodeStr, "%d", msg->message.response.statusCode); */
-/*         count += strlen(statusCodeStr); */
-/*         count += strlen(msg->message.response.statusString); */
-/*         // two spaces and \r\n */
-/*         count += MESSAGE_END_LENGTH; */
-/*     } */
-/*     // Count the size of the options */
-/*     current = msg->options; */
-
-/*     while (current) { */
-/*         count += strlen(current->option); */
-/*         count += strlen(current->content); */
-/*         // :[space] and \r\n */
-/*         count += MESSAGE_END_LENGTH; */
-/*         current = current->next; */
-/*     } */
-
-/*     // /r/n ending */
-/*     count += CRLF_LENGTH; */
-/*     count += msg->payloadLength; */
-
-/*     return (int)count; */
-/* } */
-
+// Main parser: create and return the JSON buffer with extracted informations
 int rtsp_parser(const u_char *packet, int size_payload, char *json_buffer, int buffer_len) {
 
     int ret = -1;
@@ -107,25 +64,34 @@ int rtsp_message_parser(rtsp_message *msg, char *rtspMessage, int length) {
     /** Declaration of variables to save in msg **/
     char *protocol = NULL;
     char *uri = NULL;
+    char *ua = NULL;
     char *command = NULL;
-    char *sequence = NULL;
+    char *seq_num = NULL;
     char *status_code = NULL;
     char *status_str = NULL;
-    char *header_field_name = NULL;
-    char *header_field_val = NULL;
     char *server = NULL;
+    char *cache_control = NULL;
+    char *content_base = NULL;
+    char *content_type = NULL;
+    char *content_len = NULL;
+    char *last_mod = NULL;
+    char *transport = NULL;
+    char *session = NULL;
+    char *range = NULL;
+    char *sdp = NULL;
     char flag;
 
+    // Variables for parsing
     char *token;
-    char *endCheck;
-    char messageEnded = 0;
-    int  exitCode;
+    char *end_check;
+    int  exit_code;
+    int  is_sdp = 0;
+    char message_ended = 0;
 
     // Delimeter for strtok()
     char *delim = " \r\n";
     char *end = "\r\n";
-    char *optDelim = " :\r\n";
-    char typeFlag = IS_HEADER_FIELD; // if Header fields are present == 0, else == 1
+    char *opt_delim = " :\r\n";
 
     /* Life cycle */
     /**
@@ -134,10 +100,10 @@ int rtsp_message_parser(rtsp_message *msg, char *rtspMessage, int length) {
        3) For every command, extract the Header fields to JSON
     **/
 
-    // Put the raw message into a string we can use
+    // Put the raw message into a string
     char *messageBuffer = malloc(length + 1);
-    if (messageBuffer == NULL) {
-        exitCode = RTSP_ERROR_NO_MEMORY;
+    if(messageBuffer == NULL) {
+        exit_code = RTSP_ERROR_NO_MEMORY;
         goto ExitFailure;
     }
     memcpy(messageBuffer, rtspMessage, length);
@@ -153,8 +119,8 @@ int rtsp_message_parser(rtsp_message *msg, char *rtspMessage, int length) {
     **/
     // Get the token
     token = strtok(messageBuffer, delim);
-    if (token == NULL) {
-        exitCode = RTSP_ERROR_MALFORMED;
+    if(token == NULL) {
+        exit_code = RTSP_ERROR_MALFORMED;
         goto ExitFailure;
     }
 
@@ -170,13 +136,13 @@ int rtsp_message_parser(rtsp_message *msg, char *rtspMessage, int length) {
         token = strtok(NULL, delim);
         status_code = token;
         if(token == NULL) {
-            exitCode = RTSP_ERROR_MALFORMED;
+            exit_code = RTSP_ERROR_MALFORMED;
             goto ExitFailure;
         }
         // Get the status string
         status_str = strtok(NULL, end);
-        if (statusStr == NULL) {
-            exitCode = RTSP_ERROR_MALFORMED;
+        if(status_str == NULL) {
+            exit_code = RTSP_ERROR_MALFORMED;
             goto ExitFailure;
         }
     }
@@ -191,23 +157,23 @@ int rtsp_message_parser(rtsp_message *msg, char *rtspMessage, int length) {
         command = token;
         // save the URI
         uri = strtok(NULL, delim);
-        if (uri == NULL) { // URI
-            exitCode = RTSP_ERROR_MALFORMED;
+        if(uri == NULL) {
+            exit_code = RTSP_ERROR_MALFORMED;
             goto ExitFailure;
         }
-        //save the PROTOCOL
+        // save the PROTOCOL
         protocol = strtok(NULL, delim);
-        if (protocol == NULL) {
-            exitCode = RTSP_ERROR_MALFORMED;
+        if(protocol == NULL) {
+            exit_code = RTSP_ERROR_MALFORMED;
             goto ExitFailure;
         }
-        // Response field - we don't care about it here
-        /* statusStr = NULL; */
     }
-    if (strcmp(protocol, "RTSP/1.0")) {
-        exitCode = RTSP_ERROR_MALFORMED;
+    // check protocol for both REQUEST and RESPONSE
+    if(strcmp(protocol, "RTSP/1.0")) {
+        exit_code = RTSP_ERROR_MALFORMED;
         goto ExitFailure;
     }
+
     /**
        Header Field parsing
        - rest of pkt must be parsed to extract header field, which give us much more details
@@ -216,91 +182,141 @@ int rtsp_message_parser(rtsp_message *msg, char *rtspMessage, int length) {
     // Parse remaining payload
     while(token != NULL)
     {
-        token = strtok(NULL, typeFlag == IS_HEADER_FIELD ? optDelim : end);
+        token = strtok(NULL, opt_delim);
         if(token != NULL) {
-
-            /* TODO check for the others header fields */
-            if(starts_with(token, "Server")) {
-                /* TODO */
+            /**
+               Save Header fields value
+            **/
+            // CSEQ
+            if(!strncmp(token, "CSeq", strlen("CSeq"))) {
+                token = strtok(NULL, delim);
+                seq_num = token;
+            }
+            // USER-AGENT
+            else if(!strncmp(token, "User-Agent", strlen("User-Agent"))) {
+                token = strtok(NULL, delim);
+                ua = token;
+            }
+            // SERVER
+            else if(!strncmp(token, "Server", strlen("Server"))) {
+                token = strtok(NULL, end);
+                server = token+1; // +1 to cut the initial space
+            }
+            // CACHE-CONTROL
+            else if(!strncmp(token, "Cache-Control", strlen("Cache-Control"))) {
+                token = strtok(NULL, end);
+                cache_control = token+1; // +1 to cut the initial space
+            }
+            // CONTENT-TYPE
+            else if(!strncmp(token, "Content-Type", strlen("Content-type"))) {
+                token = strtok(NULL, delim);
+                content_type = token;
+                if(!strncmp(content_type, "application/sdp", strlen("application/sdp")))
+                    is_sdp = 1;
+            }
+            // CONTENT-LENGTH
+            else if(!strncmp(token, "Content-Length", strlen("Content-Length"))) {
+                token = strtok(NULL, delim);
+                content_len = token;
+            }
+            // CONTENT-BASE
+            else if(!strncmp(token, "Content-Base", strlen("Content-Base"))) {
+                token = strtok(NULL, delim);
+                content_base = token;
+            }
+            // LAST-MODIFIED
+            else if(!strncmp(token, "Last-Modified", strlen("Last-Modified"))) {
+                token = strtok(NULL, end);
+                last_mod = token+1;
+            }
+            // TRANSPORT
+            else if(!strncmp(token, "Transport", strlen("Transport"))) {
+                token = strtok(NULL, end);
+                transport = token+1;
+            }
+            // SESSION
+            else if(!strncmp(token, "Session", strlen("Session"))) {
+                token = strtok(NULL, end);
+                session = token+1;
+            }
+            // RANGE
+            else if(!strncmp(token, "Range", strlen("Range"))) {
+                token = strtok(NULL, delim);
+                range = token;
+            }
+            // Discard option
+            else {
+                token = strtok(NULL, end);
             }
 
-            // Save Header field value
-            if(typeFlag == IS_HEADER_FIELD) {
-                // parse for name
-                header_field_name = token;
-                // parse for value
-                token = strtok(NULL, delim);
-                header_field_val = token;
+            /* Check if we're at the end of the message portion marked by \r\n\r\n
+               end_check points to the remainder of messageBuffer after the token
+            */
+            end_check = &token[0] + strlen(token) + 1;
 
-                /**
-                   Check if we're at the end of the message portion marked by \r\n\r\n
-                   endCheck points to the remainder of messageBuffer after the token
-                **/
-                endCheck = &token[0] + strlen(token) + 1;
-
-                // Check if we've hit the end of the message. The first \r is missing because it's been tokenized
-                if(starts_with(endCheck, "\n") && endCheck[1] == '\0') {
-                    // End of the message
-                    messageEnded = 1;
-                    break;
+            // Check if we've hit the end of the message. The first \r is missing because it's been tokenized
+            if(starts_with(end_check, "\n") && end_check[1] == '\0') {
+                // End of the message
+                message_ended = 1;
+                break;
+            }
+            else if(starts_with(end_check, "\n\r\n")) {
+                // check the presence of SDP string for RTSP session
+                if(is_sdp == 1) {
+                    sdp = end_check+3; // move pointer after \n\r\n
+                    is_sdp = 0;
                 }
-                else if(starts_with(endCheck, "\n\r\n")) {
-                    // End of the message
-                    messageEnded = 1;
-                    break;
-                }
+                // End of the message
+                message_ended = 1;
+                break;
             }
         }
     }
     // If we never encountered the double CRLF, then the message is malformed!
-    if (!messageEnded) {
-        exitCode = RTSP_ERROR_MALFORMED;
+    if(!message_ended) {
+        exit_code = RTSP_ERROR_MALFORMED;
         goto ExitFailure;
     }
 
-    // Get sequence number as an integer
-    sequence = get_option_content(options, "CSeq");
-    if (sequence != NULL) {
-        sequenceNum = atoi(sequence);
-    }
-    else {
-        sequenceNum = SEQ_INVALID;
-    }
-    // Package the new parsed message into the struct
-    if (flag == REQUEST) {
-        create_rtsp_request(msg, messageBuffer, FLAG_ALLOCATED_MESSAGE_BUFFER | FLAG_ALLOCATED_OPTION_ITEMS, command, uri,
-            protocol, sequenceNum, options, payload, payload ? length - (int)(messageBuffer - payload) : 0);
-    }
-    else {
-        create_rtsp_response(msg, messageBuffer, FLAG_ALLOCATED_MESSAGE_BUFFER | FLAG_ALLOCATED_OPTION_ITEMS, protocol, statusCode,
-            statusStr, sequenceNum, options, payload, payload ? length - (int)(messageBuffer - payload) : 0);
-    }
+    /*** Create the MESSAGE with extracted meaningful fields ***/
+    create_rtsp_message(msg, protocol, uri, command, seq_num, status_code,
+                        server, ua, cache_control, content_len, content_type, content_base,
+                        last_mod, range, session, transport, flag, sdp);
+
+    // free allocated variables
+    free(messageBuffer);
+
     return RTSP_SUCCESS;
 
-ExitFailure:
-    if (options) {
-        free_option_list(options);
-    }
-    if (messageBuffer) {
-        free(messageBuffer);
-    }
-    return exitCode;
+ ExitFailure:
+    return exit_code;
 }
 
 
 // Create new RTSP message struct with response data
-void create_rtsp_message(prtsp_message msg, char *protocol, char *uri, char *command, char *sequence,
-                         char *header_field_name, char *header_field_value, char msg_type) {
+void create_rtsp_message(rtsp_message *msg, char *protocol, char *uri, char *command, char *seq_num,
+                         char *status_code, char *server, char *ua, char *cache_control, char *content_len,
+                         char *content_type, char *content_base, char *last_mod, char *range, char *session,
+                         char *transport, char msg_type, char *sdp) {
 
-    // Message Type
-    if(msg_type == REQUEST)
-        strncpy(msg->flags, "Request", strlen("Request"));
-
-    msg->protocol = protocol;
-    msg->uri = uri;
+    // Basic informations
+    msg->cache_control = cache_control;
+    msg->content_base = content_base;
+    msg->content_len = content_len;
+    msg->content_type = content_type;
+    msg->last_mod = last_mod;
+    msg->range = range;
+    msg->session = session;
+    msg->status_code = status_code;
+    msg->transport = transport;
+    msg->msg_type = msg_type;
     msg->command = command;
-    msg->sequence = sequence;
-    msg->geader_field_name = header_field_name;
-    msg->geader_field_val = header_field_val;
-
+    msg->protocol = protocol;
+    msg->status_code = status_code;
+    msg->seq_num = seq_num;
+    msg->ua = ua;
+    msg->uri = uri;
+    msg->server = server;
+    // SDP for RTSP session
+    msg->sdp = sdp;
 }
