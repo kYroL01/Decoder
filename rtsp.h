@@ -116,21 +116,21 @@
 */
 
 typedef struct _RTSP_MESSAGE {
-    char *cache_control;
-    char *content_base;
-    char *content_len;
-    char *content_type;
-    char *command;
+    char *cache_control; //
+    char *content_base; //
+    char *content_len; //
+    char *content_type; //
+    char *command; //
     char *last_mod;
     char *range;
     char *protocol;
-    char *seq_num;
-    char *server;
-    char *session;
-    char *status_code;
-    char *transport;
-    char *ua;
-    char *uri;
+    char *seq_num; //
+    char *server; //
+    char *session; //
+    char *status_code; //
+    char *transport; //
+    char *ua; //
+    char *uri; //
     char msg_type;
     /* list not complete: add new in needed */
     char *sdp;

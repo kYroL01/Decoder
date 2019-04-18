@@ -34,10 +34,16 @@ static int starts_with(const char *s, const char *prefix) {
         return 0;
 }
 
-// Main parser: create and return the JSON buffer with extracted informations
+
+/**
+   Parse packet and fill JSON buffer
+   @param  packet, size_payload, json_buffer, buffer_len
+   @return 0 if pkt is rtsp and JSON buffer is created
+   @return -1 in case of errors
+**/
 int rtsp_parser(const u_char *packet, int size_payload, char *json_buffer, int buffer_len) {
 
-    int ret = -1;
+    int ret = -1, js_ret = 0;
 
     // check param
     if(!packet || size_payload == 0) {
@@ -50,11 +56,67 @@ int rtsp_parser(const u_char *packet, int size_payload, char *json_buffer, int b
 
     ret = rtsp_message_parser(msg, (char*) packet, size_payload);
 
-    // TODO: fill the JSON buffer
+    /**
+       Create json buffer
+    **/
+    /* { */
+    js_ret += snprintf((json_buffer + js_ret), buffer_len, "{ \"rtsp_report_information\":{ ");
+    // TYPE
+    if(msg->msg_type == 0)
+        js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
+                           "\"type\":%s, ", "request");
+    else
+        js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
+                           "\"type\":%s, ", "response");
+    // COMMAND
+    js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
+                       "\"command\":%s, ", (msg->command == NULL) ? "-" : msg->command);
+    // STATUS CODE
+    js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
+                       "\"status code\":%s, ", (msg->status_code == NULL) ? "-" : msg->status_code);
+    // SEQNUM
+    js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
+                       "\"seq-num\":%s, ", (msg->seq_num == NULL) ? "-" : msg->seq_num);
+    // SESSION
+    js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
+                       "\"session\":%s, ", (msg->session == NULL) ? "-" : msg->session);
+    // SERVER
+    js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
+                       "\"server\":%s, ", (msg->server == NULL) ? "-" : msg->server);
+    // URI
+    js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
+                       "\"uri\":%s, ", (msg->uri == NULL) ? "-" : msg->uri);
+    // UA
+    js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
+                       "\"user-agent\":%s, ", (msg->ua == NULL) ? "-" : msg->ua);
+    // CONTENT BASE
+    js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
+                       "\"content-base\":%s, ", (msg->content_base == NULL) ? "-" : msg->content_base);
+    // CONTENT LEN
+    js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
+                       "\"content-len\":%s, ", (msg->content_len == NULL) ? "-" : msg->content_len);
+    // CONTENT TYPE
+    js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
+                       "\"content-type\":%s, ", (msg->content_type == NULL) ? "-" : msg->content_type);
+    // PROTOCOL
+    js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
+                           "\"protocol\":%s, ", (msg->protocol == NULL) ? "-" : msg->protocol);
+    // CACHE CONTROL
+    js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
+                       "\"cache control\":%s, ", (msg->cache_control == NULL) ? "-" : msg->cache_control);
+    // TRANSPORT
+    js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
+                       "\"transport\":%s ", (msg->transport == NULL) ? "-" : msg->transport);
+    // SDP
+    js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
+                       "\"sdp\":%s ", (msg->sdp == NULL) ? "-" : msg->sdp);
+    /* } */
+    js_ret += snprintf((json_buffer + js_ret - 1), (buffer_len - js_ret + 1), " }");
+    js_ret += snprintf((json_buffer + js_ret - 1), (buffer_len - js_ret + 1), " }");
 
-    if(ret != RTSP_SUCCESS) return -1;
+    if(ret != 0) return -1;
 
-    return RTSP_SUCCESS;
+    return 0;
 }
 
 

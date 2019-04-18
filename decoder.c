@@ -1,20 +1,20 @@
 /**
    Main module of decoder
-   
+
    decoder - test program for network protocols
    Copyright (C) 2016-2018 Michele Campus <fci1908@gmail.com>
-   
+
    This file is part of decoder.
-   
+
    decoder is free software: you can redistribute it and/or modify it under the
    terms of the GNU General Public License as published by the Free Software
    Foundation, either version 3 of the License, or (at your option) any later
    version.
-   
+
    decoder is distributed in the hope that it will be useful, but WITHOUT ANY
    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
    A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-   
+
    You should have received a copy of the GNU General Public License along with
    decoder. If not, see <http://www.gnu.org/licenses/>.
 **/
@@ -82,7 +82,7 @@ void sigint_handler()
 int main( int argc, char *argv[] )
 {
   struct flow_callback_proto * fcp; // for general stats
-  
+
   pcap_if_t *all_devs, *d = NULL;
   pcap_t *pcap_handle;
 
@@ -101,7 +101,7 @@ int main( int argc, char *argv[] )
   memset(err_buff, 0, PCAP_ERRBUF_SIZE);
   // initialize volatile sigatomic to 0
   signal_flag = 0;
-  
+
   //parse options
   int opt;
   while( opt = getopt(argc, argv, ":hi:n:p:ls") , opt != -1 )
@@ -115,16 +115,16 @@ int main( int argc, char *argv[] )
     /* case 'n': */
     /*   num_threads = atoi(optarg); */
     /*   break; */
-      
+
     case 'h':
       print_usage();
       return EXIT_SUCCESS;
-      
+
     case 'p':
       file = optarg;
       printf("open capture from pcap file\n");
       break;
-      
+
     case 'l':
       if(pcap_findalldevs(&all_devs, err_buff) == -1) {
         fprintf(stderr,"Error in pcap_findalldevs: %s\n", err_buff);
@@ -138,19 +138,19 @@ int main( int argc, char *argv[] )
       save = 1;
       printf("Certificate(s) are saved in directory <certificates>\n");
       break;
-      
+
     case ':':
       fprintf( stderr, "Missing argument for option '%c'\n", optopt );
       print_usage();
       return EXIT_FAILURE;
-      
+
     default:
       fprintf( stderr, "Unknown option '%c'\n", optopt );
       print_usage();
       return EXIT_FAILURE;
     }
   }
-  
+
   if(device) {
 
     /* setting signal mask */
@@ -185,7 +185,7 @@ int main( int argc, char *argv[] )
     }
   }
   else if(file) {
-    printf("Opening pcap file %s\n", file); 
+    printf("Opening pcap file %s\n", file);
     // open file pcap
     pcap_handle = pcap_open_offline(file, err_buff);
     if(!pcap_handle) {
@@ -224,17 +224,17 @@ int main( int argc, char *argv[] )
   pcap_loop(fcp->pcap_handle, -1, callback_proto, (u_char*) fcp);
 
   printf("\n\n<<< DETECTION FINISHED >>>\n\n");
-  
+
   // print statistics of flows
   print_stats(fcp);
-  
+
   // terminate the handle pcap function
   pcap_close(fcp->pcap_handle);
-  
+
   return 0;
 }
 
 /**
    TODO
    - extraction name server from client hello and server hello
- */
+**/

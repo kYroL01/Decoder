@@ -287,7 +287,7 @@ static unsigned int process_packet(const u_char * payload,
         else {
             ret = 5;
             /* Print JSON buffer */
-            /* printf("%s\n", json_buffer); */
+            printf("%s\n", json_buffer);
             goto end;
         }
 
