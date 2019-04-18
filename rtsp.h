@@ -31,18 +31,8 @@
 #define RTSP_ERROR_NO_MEMORY -1
 #define RTSP_ERROR_MALFORMED -2
 
-#define SEQ_INVALID -1
-
-#define FLAG_ALLOCATED_OPTION_FIELDS 0x1
-#define FLAG_ALLOCATED_MESSAGE_BUFFER 0x2
-#define FLAG_ALLOCATED_OPTION_ITEMS 0x4
-#define FLAG_ALLOCATED_PAYLOAD 0x8
-
-#define CRLF_LENGTH 2
-#define MESSAGE_END_LENGTH (2 + CRLF_LENGTH)
-
-/*** RTSP message type ***/
 /**
+   :: RTSP message type ::
    There are two types of message:
    - Request (from Client to Server)
    - Response (from Server to Client)
@@ -50,8 +40,8 @@
 #define REQUEST 0
 #define RESPONSE 1
 
-/*** Command definition ***/
 /**
+   :: Command definition::
    The command token indicates the method to be performed on the resource
    identified by the Request-URI
 **/
@@ -70,8 +60,8 @@
   TEARDOWN          C->S             P,S        required
 */
 
-/**** Header Field Definitions ****/
 /**
+   :: Header Field Definitions ::
    Summary of the header fields used by RTSP (RFC 2326 RTSP 1.0)
    - type "g" designates general request headers to be found in both requests and responses
    - type "R" designates request headers
@@ -147,6 +137,7 @@ typedef struct _RTSP_MESSAGE {
 } rtsp_message;
 
 /* Prototype of functions */
+int rtsp_parser(const u_char *packet, int size_payload, char *json_buffer, int buffer_len);
 int rtsp_message_parser(rtsp_message *msg, char *rtspMessage, int length);
 void create_rtsp_message(rtsp_message *msg, char *protocol, char *uri, char *command, char *seq_num,
                          char *status_code, char *server, char *ua, char *cache_control, char *content_len,
