@@ -122,13 +122,12 @@ int main( int argc, char *argv[] )
 
     case 'p':
       file = optarg;
-      printf("open capture from pcap file\n");
       break;
 
     case 'l':
       if(pcap_findalldevs(&all_devs, err_buff) == -1) {
         fprintf(stderr,"Error in pcap_findalldevs: %s\n", err_buff);
-	print_usage();
+        print_usage();
         return EXIT_FAILURE;
       }
       print_all_devices(all_devs, d);
@@ -176,6 +175,7 @@ int main( int argc, char *argv[] )
       perror("ERROR: Cannot restore process's signal mask, ");
       return EXIT_FAILURE;
     }
+
     printf("Sniffing on device %s\n", device);
     // open device live
     pcap_handle = pcap_open_live(device, SNAP_LEN, 0, 0, err_buff);
@@ -189,7 +189,7 @@ int main( int argc, char *argv[] )
     // open file pcap
     pcap_handle = pcap_open_offline(file, err_buff);
     if(!pcap_handle) {
-      pcap_fatal("pcap_open_ofline", err_buff);
+      pcap_fatal("pcap_open_offline", err_buff);
     }
   }
   else if(opt == -1) {
