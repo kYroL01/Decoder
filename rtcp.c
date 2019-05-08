@@ -48,7 +48,7 @@ int check_rtcp_version (char *packet, int len) {
 }
 
 
-int rtcp_dissector(char *packet, int len, char *json_buffer, int buffer_len) {
+int rtcp_parser(char *packet, int len, char *json_buffer, int buffer_len) {
 
 	if(packet == NULL || len == 0) return -1;
 

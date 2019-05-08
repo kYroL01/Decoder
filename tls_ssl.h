@@ -1,24 +1,24 @@
 /**
    Header containing macros and struct for tls/ssl session
-   
+
    decoder - decode TLS/SSL traffic - save handshake and extract certificate
    Copyright (C) 2016-2018 Michele Campus <fci1908@gmail.com>
-   
+
    This file is part of decoder.
 
    [ The headers in this module follow the RFC 5246
    and the pcap analyzed to have a real conformity
    from theory and real traffic ]
-   
+
    decoder is free software: you can redistribute it and/or modify it under the
    terms of the GNU General Public License as published by the Free Software
    Foundation, either version 3 of the License, or (at your option) any later
    version.
-   
+
    decoder is distributed in the hope that it will be useful, but WITHOUT ANY
    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
    A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-   
+
    You should have received a copy of the GNU General Public License along with
    decoder. If not, see <http://www.gnu.org/licenses/>.
 **/
@@ -37,7 +37,7 @@
 
 /**
    - Header tls/ssl Type values
-   
+
    Record Type Values       dec      hex
    -------------------------------------
    CHANGE_CIPHER_SPEC        20     0x14
@@ -111,7 +111,7 @@ struct Cert_Req {
 };
 
 
-// CLIENT KEY EXCHANGE 
+// CLIENT KEY EXCHANGE
 struct client_key_exch {
   u_int8_t p_len;
   u_int8_t * p_data;
