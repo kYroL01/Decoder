@@ -118,7 +118,7 @@ static int check_appID(u_int32_t app_id) {
 **/
 int diameter_parser(const u_char *packet, int size_payload, char *json_buffer, int buffer_len)
 {
-    int offset = 0, js_ret = 0, ret;
+    int offset = 0, js_ret = 0;
     // header field var for JSON
     int classCom = -1, classApp = -1;
     u_int8_t flag;

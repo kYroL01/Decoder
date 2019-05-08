@@ -36,7 +36,7 @@ static int starts_with(const char *s, const char *prefix) {
 
 
 /**
-   Parse packet and fill JSON buffer
+   Parse packet and fill a JSON buffer
    @param  packet, size_payload, json_buffer, buffer_len
    @return 0 if pkt is rtsp and JSON buffer is created
    @return -1 in case of errors
@@ -57,7 +57,7 @@ int rtsp_parser(const u_char *packet, int size_payload, char *json_buffer, int b
     ret = rtsp_message_parser(msg, (char*) packet, size_payload);
 
     /**
-       Create json buffer
+       Create JSON buffer
     **/
     /* { */
     js_ret += snprintf((json_buffer + js_ret), buffer_len, "{ \"rtsp_report_information\":{ ");

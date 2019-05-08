@@ -115,6 +115,7 @@
    WWW-Authenticate     r      opt.      all
 */
 
+
 typedef struct _RTSP_MESSAGE {
     char *cache_control; //
     char *content_base; //
@@ -135,6 +136,7 @@ typedef struct _RTSP_MESSAGE {
     /* list not complete: add new in needed */
     char *sdp;
 } rtsp_message;
+
 
 /* Prototype of functions */
 int rtsp_parser(const u_char *packet, int size_payload, char *json_buffer, int buffer_len);
