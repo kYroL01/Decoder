@@ -224,7 +224,7 @@ static unsigned int process_packet(const u_char * payload,
 
         /**
            check for RTCP protocol
-         */
+        */
         // check version
         ret = check_rtcp_version(payload, size_payload);
 
@@ -274,139 +274,143 @@ static unsigned int process_packet(const u_char * payload,
         /**
            Check RTSP dissector
         */
-        memset(json_buffer, 0, JSON_BUFFER_LEN);
+        if(src_port == 554 || dst_port == 554) {
 
-        // Call RTSP dissector function
-        ret = rtsp_parser(payload,
-                          size_payload,
-                          json_buffer,
-                          JSON_BUFFER_LEN);
-        if(ret == -1) {
-            fprintf(stderr, "Not an rtsp packet\n");
-        }
-        else {
-            ret = 5;
-            /* Print JSON buffer */
-            printf("%s\n", json_buffer);
-            goto end;
+            memset(json_buffer, 0, JSON_BUFFER_LEN);
+
+            // Call RTSP dissector function
+            ret = rtsp_parser(payload,
+                              size_payload,
+                              json_buffer,
+                              JSON_BUFFER_LEN);
+            if(ret == -1) {
+                fprintf(stderr, "Not an rtsp packet\n");
+            }
+            else {
+                ret = 5;
+                /* Print JSON buffer */
+                printf("%s\n", json_buffer);
+                goto end;
+            }
         }
 
 
         /**
            Check TLS dissector
         */
+        if(src_port == 443 || dst_port == 443) {
+            memset(json_buffer, 0, JSON_BUFFER_LEN);
 
-        memset(json_buffer, 0, JSON_BUFFER_LEN);
+            struct Flow_key  *flow_key  = NULL;
+            struct Handshake *handshake = NULL;
 
-        struct Flow_key  *flow_key  = NULL;
-        struct Handshake *handshake = NULL;
+            // check parameters
+            if(!payload || size_payload <= 0 ||
+               (ip_version != 4 && ip_version != 6) || (!iphv4 && !iphv6) ||
+               proto_id_l3 <= 0 || !fcp) {
+                fprintf(stderr, "\t Discard packet\n");
+                return -1;
+            }
 
-        // check parameters
-        if(!payload || size_payload <= 0 ||
-           (ip_version != 4 && ip_version != 6) || (!iphv4 && !iphv6) ||
-           proto_id_l3 <= 0 || !fcp) {
-            fprintf(stderr, "\t Discard packet\n");
-            return -1;
+            /**
+               # KEY #
+               define the Flow Key (allocate memory)
+               prepare the key with passed values
+            */
+            flow_key = malloc(sizeof(struct Flow_key));
+            memset(flow_key, 0, sizeof(struct Flow_key));
+
+            // fill the Flow Key
+            if(ip_version == IPv4) {
+                flow_key->ip_src = iphv4->ip_src_addr; // src address
+                flow_key->ip_dst = iphv4->ip_dst_addr; // dst address
+            }
+            else {
+                // src address
+                flow_key->ipv6_src.ipv6_addr[0] = iphv6->ipv6_src.ipv6_addr[0];
+                flow_key->ipv6_src.ipv6_addr[1] = iphv6->ipv6_src.ipv6_addr[1];
+                flow_key->ipv6_src.ipv6_addr[2] = iphv6->ipv6_src.ipv6_addr[2];
+                flow_key->ipv6_src.ipv6_addr[3] = iphv6->ipv6_src.ipv6_addr[3];
+                flow_key->ipv6_src.ipv6_addr[4] = iphv6->ipv6_src.ipv6_addr[4];
+                flow_key->ipv6_src.ipv6_addr[5] = iphv6->ipv6_src.ipv6_addr[5];
+                flow_key->ipv6_src.ipv6_addr[6] = iphv6->ipv6_src.ipv6_addr[6];
+                flow_key->ipv6_src.ipv6_addr[7] = iphv6->ipv6_src.ipv6_addr[7];
+                flow_key->ipv6_src.ipv6_addr[8] = iphv6->ipv6_src.ipv6_addr[8];
+                flow_key->ipv6_src.ipv6_addr[9] = iphv6->ipv6_src.ipv6_addr[9];
+                flow_key->ipv6_src.ipv6_addr[10] = iphv6->ipv6_src.ipv6_addr[10];
+                flow_key->ipv6_src.ipv6_addr[11] = iphv6->ipv6_src.ipv6_addr[11];
+                flow_key->ipv6_src.ipv6_addr[12] = iphv6->ipv6_src.ipv6_addr[12];
+                flow_key->ipv6_src.ipv6_addr[13] = iphv6->ipv6_src.ipv6_addr[13];
+                flow_key->ipv6_src.ipv6_addr[14] = iphv6->ipv6_src.ipv6_addr[14];
+                flow_key->ipv6_src.ipv6_addr[15] = iphv6->ipv6_src.ipv6_addr[15];
+                // dst address
+                flow_key->ipv6_dst.ipv6_addr[0] = iphv6->ipv6_dst.ipv6_addr[0];
+                flow_key->ipv6_dst.ipv6_addr[1] = iphv6->ipv6_dst.ipv6_addr[1];
+                flow_key->ipv6_dst.ipv6_addr[2] = iphv6->ipv6_dst.ipv6_addr[2];
+                flow_key->ipv6_dst.ipv6_addr[3] = iphv6->ipv6_dst.ipv6_addr[3];
+                flow_key->ipv6_dst.ipv6_addr[4] = iphv6->ipv6_dst.ipv6_addr[4];
+                flow_key->ipv6_dst.ipv6_addr[5] = iphv6->ipv6_dst.ipv6_addr[5];
+                flow_key->ipv6_dst.ipv6_addr[6] = iphv6->ipv6_dst.ipv6_addr[6];
+                flow_key->ipv6_dst.ipv6_addr[7] = iphv6->ipv6_dst.ipv6_addr[7];
+                flow_key->ipv6_dst.ipv6_addr[8] = iphv6->ipv6_dst.ipv6_addr[8];
+                flow_key->ipv6_dst.ipv6_addr[9] = iphv6->ipv6_dst.ipv6_addr[9];
+                flow_key->ipv6_dst.ipv6_addr[10] = iphv6->ipv6_dst.ipv6_addr[10];
+                flow_key->ipv6_dst.ipv6_addr[11] = iphv6->ipv6_dst.ipv6_addr[11];
+                flow_key->ipv6_dst.ipv6_addr[12] = iphv6->ipv6_dst.ipv6_addr[12];
+                flow_key->ipv6_dst.ipv6_addr[13] = iphv6->ipv6_dst.ipv6_addr[13];
+                flow_key->ipv6_dst.ipv6_addr[14] = iphv6->ipv6_dst.ipv6_addr[14];
+                flow_key->ipv6_dst.ipv6_addr[15] = iphv6->ipv6_dst.ipv6_addr[15];
+            }
+
+            // src port
+            flow_key->src_port = src_port;
+            // dst port
+            flow_key->dst_port = dst_port;
+
+            // proto L3
+            flow_key->proto_id_l3 = proto_id_l3;
+
+            /* Call TLS dissector function */
+            ret = tls_parser(&payload,
+                             size_payload,
+                             ip_version,
+                             flow_key,
+                             src_port,
+                             dst_port,
+                             proto_id_l3,
+                             save);
+            /* HT_Flows */
+            if(ret == -1) {
+                fprintf(stderr, "Not a TLS packet\n");
+                // free structs
+                free(flow_key);
+                free(handshake);
+            }
+            else {
+                ret = 4;
+                goto end;
+            }
         }
-
-        /**
-           # KEY #
-           define the Flow Key (allocate memory)
-           prepare the key with passed values
-        */
-        flow_key = malloc(sizeof(struct Flow_key));
-        memset(flow_key, 0, sizeof(struct Flow_key));
-
-        // fill the Flow Key
-        if(ip_version == IPv4) {
-            flow_key->ip_src = iphv4->ip_src_addr; // src address
-            flow_key->ip_dst = iphv4->ip_dst_addr; // dst address
-        }
-        else {
-            // src address
-            flow_key->ipv6_src.ipv6_addr[0] = iphv6->ipv6_src.ipv6_addr[0];
-            flow_key->ipv6_src.ipv6_addr[1] = iphv6->ipv6_src.ipv6_addr[1];
-            flow_key->ipv6_src.ipv6_addr[2] = iphv6->ipv6_src.ipv6_addr[2];
-            flow_key->ipv6_src.ipv6_addr[3] = iphv6->ipv6_src.ipv6_addr[3];
-            flow_key->ipv6_src.ipv6_addr[4] = iphv6->ipv6_src.ipv6_addr[4];
-            flow_key->ipv6_src.ipv6_addr[5] = iphv6->ipv6_src.ipv6_addr[5];
-            flow_key->ipv6_src.ipv6_addr[6] = iphv6->ipv6_src.ipv6_addr[6];
-            flow_key->ipv6_src.ipv6_addr[7] = iphv6->ipv6_src.ipv6_addr[7];
-            flow_key->ipv6_src.ipv6_addr[8] = iphv6->ipv6_src.ipv6_addr[8];
-            flow_key->ipv6_src.ipv6_addr[9] = iphv6->ipv6_src.ipv6_addr[9];
-            flow_key->ipv6_src.ipv6_addr[10] = iphv6->ipv6_src.ipv6_addr[10];
-            flow_key->ipv6_src.ipv6_addr[11] = iphv6->ipv6_src.ipv6_addr[11];
-            flow_key->ipv6_src.ipv6_addr[12] = iphv6->ipv6_src.ipv6_addr[12];
-            flow_key->ipv6_src.ipv6_addr[13] = iphv6->ipv6_src.ipv6_addr[13];
-            flow_key->ipv6_src.ipv6_addr[14] = iphv6->ipv6_src.ipv6_addr[14];
-            flow_key->ipv6_src.ipv6_addr[15] = iphv6->ipv6_src.ipv6_addr[15];
-            // dst address
-            flow_key->ipv6_dst.ipv6_addr[0] = iphv6->ipv6_dst.ipv6_addr[0];
-            flow_key->ipv6_dst.ipv6_addr[1] = iphv6->ipv6_dst.ipv6_addr[1];
-            flow_key->ipv6_dst.ipv6_addr[2] = iphv6->ipv6_dst.ipv6_addr[2];
-            flow_key->ipv6_dst.ipv6_addr[3] = iphv6->ipv6_dst.ipv6_addr[3];
-            flow_key->ipv6_dst.ipv6_addr[4] = iphv6->ipv6_dst.ipv6_addr[4];
-            flow_key->ipv6_dst.ipv6_addr[5] = iphv6->ipv6_dst.ipv6_addr[5];
-            flow_key->ipv6_dst.ipv6_addr[6] = iphv6->ipv6_dst.ipv6_addr[6];
-            flow_key->ipv6_dst.ipv6_addr[7] = iphv6->ipv6_dst.ipv6_addr[7];
-            flow_key->ipv6_dst.ipv6_addr[8] = iphv6->ipv6_dst.ipv6_addr[8];
-            flow_key->ipv6_dst.ipv6_addr[9] = iphv6->ipv6_dst.ipv6_addr[9];
-            flow_key->ipv6_dst.ipv6_addr[10] = iphv6->ipv6_dst.ipv6_addr[10];
-            flow_key->ipv6_dst.ipv6_addr[11] = iphv6->ipv6_dst.ipv6_addr[11];
-            flow_key->ipv6_dst.ipv6_addr[12] = iphv6->ipv6_dst.ipv6_addr[12];
-            flow_key->ipv6_dst.ipv6_addr[13] = iphv6->ipv6_dst.ipv6_addr[13];
-            flow_key->ipv6_dst.ipv6_addr[14] = iphv6->ipv6_dst.ipv6_addr[14];
-            flow_key->ipv6_dst.ipv6_addr[15] = iphv6->ipv6_dst.ipv6_addr[15];
-        }
-
-        // src port
-        flow_key->src_port = src_port;
-        // dst port
-        flow_key->dst_port = dst_port;
-
-        // proto L3
-        flow_key->proto_id_l3 = proto_id_l3;
-
-        /* Call TLS dissector function */
-        ret = tls_parser(&payload,
-                         size_payload,
-                         ip_version,
-                         flow_key,
-                         src_port,
-                         dst_port,
-                         proto_id_l3,
-                         save);
-        /* HT_Flows */
-        if(ret == -1) {
-            fprintf(stderr, "Not a TLS packet\n");
-            // free structs
-            free(flow_key);
-            free(handshake);
-        }
-        else {
-            ret = 4;
-            goto end;
-        }
-
 
         /**
            Check DIAMETER dissector
         */
+        if(src_port == 3868 || dst_port == 3868) {
+            memset(json_buffer, 0, JSON_BUFFER_LEN);
 
-        memset(json_buffer, 0, JSON_BUFFER_LEN);
-
-        // Call DIAMETER dissector function
-        ret = diameter_parser(payload,
-                                 size_payload,
-                                 json_buffer,
-                                 JSON_BUFFER_LEN);
-        if(ret == -1) {
-            fprintf(stderr, "Not a diameter packet\n");
-        }
-        else {
-            ret = 3;
-            /* Print JSON buffer */
-            printf("%s\n", json_buffer);
+            // Call DIAMETER dissector function
+            ret = diameter_parser(payload,
+                                  size_payload,
+                                  json_buffer,
+                                  JSON_BUFFER_LEN);
+            if(ret == -1) {
+                fprintf(stderr, "Not a diameter packet\n");
+            }
+            else {
+                ret = 3;
+                /* Print JSON buffer */
+                printf("%s\n", json_buffer);
+            }
         }
     }
  end:
