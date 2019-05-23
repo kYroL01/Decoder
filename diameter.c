@@ -270,6 +270,7 @@ int diameter_parser(const u_char *packet, int size_payload, char *json_buffer, i
             // put buffer in JSON buffer
             js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
                                "\"session-ID\":%s, ", session_id);
+            break;
         }
 
         case VENDOR_SPEC_ID: {
@@ -290,6 +291,7 @@ int diameter_parser(const u_char *packet, int size_payload, char *json_buffer, i
             // put buffer in JSON buffer
             js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
                                "\"vendor-spec-ID\":%s, ", vendor_spec_id);
+            break;
         }
 
         case AUTH_SESS_ST: {
@@ -310,6 +312,7 @@ int diameter_parser(const u_char *packet, int size_payload, char *json_buffer, i
             // put buffer in JSON buffer
             js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
                                "\"auth-sess-st\":%s, ", auth_sess_st);
+            break;
         }
 
         case ORIGIN_HOST: {
@@ -331,6 +334,7 @@ int diameter_parser(const u_char *packet, int size_payload, char *json_buffer, i
             // put buffer in JSON buffer
             js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
                                "\"origin-host\":%s, ", org_host);
+            break;
         }
 
         case DEST_HOST: {
@@ -352,6 +356,7 @@ int diameter_parser(const u_char *packet, int size_payload, char *json_buffer, i
             // put buffer in JSON buffer
             js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
                                "\"destination-host\":%s, ", dst_host);
+            break;
         }
 
         case ORIGIN_REALM: {
@@ -373,6 +378,7 @@ int diameter_parser(const u_char *packet, int size_payload, char *json_buffer, i
             // put buffer in JSON buffer
             js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
                                "\"origin-realm\":%s, ", org_realm);
+            break;
         }
 
         case DEST_REALM: {
@@ -394,6 +400,7 @@ int diameter_parser(const u_char *packet, int size_payload, char *json_buffer, i
             // put buffer in JSON buffer
             js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
                                "\"destination-realm\":%s, ", dst_realm);
+            break;
         }
 
         case AUTH_APP_ID: {
@@ -414,6 +421,7 @@ int diameter_parser(const u_char *packet, int size_payload, char *json_buffer, i
             // put buffer in JSON buffer
             js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
                                "\"auth-app-ID\":%u, ", auth_app_id);
+            break;
         }
 
         case VENDOR_ID: {
@@ -434,6 +442,7 @@ int diameter_parser(const u_char *packet, int size_payload, char *json_buffer, i
             // put buffer in JSON buffer
             js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
                                "\"vendor-ID\":%u, ", vend_id);
+            break;
         }
 
         case RES_CODE: {
@@ -454,6 +463,7 @@ int diameter_parser(const u_char *packet, int size_payload, char *json_buffer, i
             // put buffer in JSON buffer
             js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
                                "\"res-code\":%u, ", res_code);
+            break;
         }
 
         case ORIGIN_ST_ID: {
@@ -474,6 +484,7 @@ int diameter_parser(const u_char *packet, int size_payload, char *json_buffer, i
             // put buffer in JSON buffer
             js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
                                "\"origin-state-id\":%u, ", orgst_id);
+            break;
         }
 
         case TIMESTAMP: {
@@ -499,253 +510,9 @@ int diameter_parser(const u_char *packet, int size_payload, char *json_buffer, i
             // put buffer in JSON buffer
             js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
                                "\"event-timestamp\":""%s"", ", buff_tm);
-
+            break;
         }
-
         } // switch
-
-
-    /*     switch(avp_code) { */
-
-    /*         // 461 */
-    /*     case SERV_CONTX_ID: */
-
-    /*         pp = pp + AVP_HEADER_LEN; */
-    /*         u_int16_t serv_contx_len = avp_len - AVP_HEADER_LEN; */
-    /*         serv_contx_id = calloc(serv_contx_len, sizeof(char)); */
-    /*         memcpy(serv_contx_id, pp, serv_contx_len); */
-
-    /*         // check for padding */
-    /*         l = avp_len; */
-    /*         padd = 0; */
-    /*         while(l % 4 != 0) { */
-    /*             padd++;	l++; */
-    /*         } */
-
-    /*         pp = pp + serv_contx_len + padd; // move pointer forward */
-    /*         offset += avp_len + padd; // update offset */
-
-    /*         // put buffer in JSON buffer */
-    /*         js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret, */
-    /*                            "\"service-context-ID\":%s, ", serv_contx_id); */
-
-    /*         /\* printf("json_buffer = %s\n", json_buffer); *\/ */
-    /*         break; */
-
-    /*         // 443 */
-    /*     case SUBSCR_ID: */
-
-    /*         pp = pp + AVP_HEADER_LEN; */
-    /*         // 1 */
-    /*         struct avp_header_t *avp_sub_id_data = (struct avp_header_t *) pp; */
-    /*         u_int16_t avp_sub_id_lenD = avp_sub_id_data->length[2] + (avp_sub_id_data->length[1] << 8) + (avp_sub_id_data->length[0] << 8); */
-    /*         u_int16_t dlen = avp_sub_id_lenD - AVP_HEADER_LEN; */
-    /*         char * subscr_id_data = calloc(dlen, sizeof(char)); */
-    /*         pp = pp + AVP_HEADER_LEN; */
-    /*         memcpy(subscr_id_data, pp, dlen); */
-    /*         pp = pp + dlen; */
-    /*         // 2 */
-    /*         struct avp_header_t * avp_sub_id_type = (struct avp_header_t *) pp; */
-    /*         u_int16_t avp_sub_id_lenT = avp_sub_id_type->length[2] + (avp_sub_id_type->length[1] << 8) + (avp_sub_id_type->length[0] << 8); */
-    /*         pp = pp + AVP_HEADER_LEN; */
-    /*         u_int32_t subscr_id_type = pp[3] + (pp[2] << 8) + (pp[1] << 8) + (pp[0] << 8); */
-    /*         u_int16_t tlen = avp_sub_id_lenT - AVP_HEADER_LEN; */
-    /*         pp = pp + tlen; */
-
-    /*         // check for padding */
-    /*         l = avp_len; */
-    /*         padd = 0; */
-    /*         while(l % 4 != 0) { */
-    /*             padd++;	l++; */
-    /*         } */
-
-    /*         pp = pp + padd; // move pointer forward */
-    /*         offset += avp_len + padd; // update offset */
-
-    /*         // put buffer in JSON buffer */
-    /*         js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret, */
-    /*                            SUBSCR_ID_JSON, subscr_id_data, subscr_id_type); */
-
-    /*         /\* printf("json_buffer = %s\n", json_buffer); *\/ */
-    /*         break; */
-
-    /*         // 440 */
-    /*     case SERV_PAR_INFO: */
-
-    /*         pp = pp + AVP_HEADER_LEN; */
-    /*         // 1 */
-    /*         struct avp_header_t *avp_serv_par_type = (struct avp_header_t *) pp; */
-    /*         u_int16_t avp_serv_par_Tlen = avp_serv_par_type->length[2] + (avp_serv_par_type->length[1] << 8) + (avp_serv_par_type->length[0] << 8); */
-    /*         pp = pp + AVP_HEADER_LEN; */
-    /*         u_int32_t serv_par_info_type = pp[3] + (pp[2] << 8) + (pp[1] << 8) + (pp[0] << 8); */
-    /*         u_int16_t Tlen = avp_serv_par_Tlen - AVP_HEADER_LEN; */
-    /*         pp = pp + Tlen; */
-    /*         // 2 */
-    /*         struct avp_header_t * avp_serv_par_value = (struct avp_header_t *) pp; */
-    /*         u_int16_t avp_serv_par_Vlen = avp_serv_par_value->length[2] + (avp_serv_par_value->length[1] << 8) + (avp_serv_par_value->length[0] << 8); */
-    /*         u_int16_t Vlen = avp_serv_par_Vlen - AVP_HEADER_LEN; */
-    /*         char * serv_par_value = calloc(Vlen, sizeof(char)); */
-    /*         pp = pp + AVP_HEADER_LEN; */
-    /*         memcpy(serv_par_value, pp, Vlen); */
-    /*         pp = pp + Vlen; */
-
-    /*         // check for internal padding */
-    /*         l = avp_serv_par_Vlen; */
-    /*         padd = 0; */
-    /*         while(l % 4 != 0) { */
-    /*             padd++;	l++; */
-    /*         } */
-    /*         pp = pp + padd; // move pointer forward */
-
-    /*         // check for padding */
-    /*         l = avp_len; */
-    /*         padd = 0; */
-    /*         while(l % 4 != 0) { */
-    /*             padd++;	l++; */
-    /*         } */
-
-    /*         pp = pp + padd; // move pointer forward */
-    /*         offset += avp_len + padd; // update offset */
-
-    /*         // put buffer in JSON buffer */
-    /*         js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret, */
-    /*                            SERV_PARAM_JSON, serv_par_info_type, serv_par_value); */
-
-    /*         /\* printf("json_buffer = %s\n", json_buffer); *\/ */
-    /*         break; */
-
-    /*         // 415 */
-    /*     case CC_REQ_NUM: */
-
-    /*         pp = pp + AVP_HEADER_LEN; */
-    /*         u_int16_t cc_req_num_len = avp_len - AVP_HEADER_LEN; */
-    /*         cc_req_num = pp[3] + (pp[2] << 8) + (pp[1] << 8) + (pp[0] << 8); */
-
-    /*         // check for padding */
-    /*         l = avp_len; */
-    /*         padd = 0; */
-    /*         while(l % 4 != 0) { */
-    /*             padd++;	l++; */
-    /*         } */
-
-    /*         pp = pp + cc_req_num_len + padd; // move pointer forward */
-    /*         offset += avp_len + padd; // update offset */
-
-    /*         // put buffer in JSON buffer */
-    /*         js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret, */
-    /*                            "\"CC-request-number\":%u, ", cc_req_num); */
-
-    /*         /\* printf("json_buffer = %s\n", json_buffer); *\/ */
-    /*         break; */
-
-    /*         // 416 */
-    /*     case CC_REQ_TYPE: */
-
-    /*         pp = pp + AVP_HEADER_LEN; */
-    /*         u_int16_t cc_req_type_len = avp_len - AVP_HEADER_LEN; */
-    /*         cc_req_type = pp[3] + (pp[2] << 8) + (pp[1] << 8) + (pp[0] << 8); */
-
-    /*         // check for padding */
-    /*         l = avp_len; */
-    /*         padd = 0; */
-    /*         while(l % 4 != 0) { */
-    /*             padd++;	l++; */
-    /*         } */
-
-    /*         pp = pp + cc_req_type_len + padd; // move pointer forward */
-    /*         offset += avp_len + padd; // update offset */
-
-    /*         // put buffer in JSON buffer */
-    /*         js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret, */
-    /*                            "\"CC-request-type\":%u, ", cc_req_type); */
-
-    /*         /\* printf("json_buffer = %s\n", json_buffer); *\/ */
-    /*         break; */
-
-    /*         // 448 */
-    /*     case VALID_TIME: */
-
-    /*         pp = pp + AVP_HEADER_LEN; */
-    /*         u_int16_t valid_len = avp_len - AVP_HEADER_LEN; */
-    /*         valid_time = pp[3] + (pp[2] << 8) + (pp[1] << 8) + (pp[0] << 8); */
-
-    /*         // check for padding */
-    /*         l = avp_len; */
-    /*         padd = 0; */
-    /*         while(l % 4 != 0) { */
-    /*             padd++;	l++; */
-    /*         } */
-
-    /*         pp = pp + valid_len + padd; // move pointer forward */
-    /*         offset += avp_len + padd; // update offset */
-
-    /*         // put buffer in JSON buffer */
-    /*         js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret, */
-    /*                            "\"Validity-time\":%u, ", valid_time); */
-
-    /*         /\* printf("json_buffer = %s\n", json_buffer); *\/ */
-    /*         break; */
-
-    /*         // 437 */
-    /*     case REQ_SERV_UNT: */
-
-    /*         pp = pp + AVP_HEADER_LEN; */
-    /*         req_serv_unit = (struct req_serv_unit_t *) pp; */
-    /*         u_int64_t req_value_dgt = req_serv_unit->value_dgt[7] + (req_serv_unit->value_dgt[6] << 8) + (req_serv_unit->value_dgt[5] << 8) + (req_serv_unit->value_dgt[4] << 8) + (req_serv_unit->value_dgt[3] << 8) + (req_serv_unit->value_dgt[2] << 8) + (req_serv_unit->value_dgt[1] << 8) + (req_serv_unit->value_dgt[0] << 8); */
-    /*         u_int32_t req_currency_code = req_serv_unit->curr_code[3] + (req_serv_unit->curr_code[2] << 8) + (req_serv_unit->curr_code[1] << 8) + (req_serv_unit->curr_code[0] << 8); */
-
-    /*         pp = pp + avp_len - AVP_HEADER_LEN; // move pointer forward */
-    /*         offset += avp_len; // update offset */
-
-    /*         // put buffer in JSON buffer */
-    /*         js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret, */
-    /*                            REQ_SERV_JSON, req_value_dgt, req_currency_code); */
-
-    /*         /\* printf("json_buffer = %s\n", json_buffer); *\/ */
-    /*         break; */
-
-    /*         // 431 */
-    /*     case GRANT_SERV_UNT: */
-
-    /*         pp = pp + AVP_HEADER_LEN; */
-    /*         grant_serv_unit = (struct grant_serv_unit_t *) pp; */
-    /*         u_int64_t grant_value_dgt = grant_serv_unit->value_dgt[7] + (grant_serv_unit->value_dgt[6] << 8) + (grant_serv_unit->value_dgt[5] << 8) + (grant_serv_unit->value_dgt[4] << 8) + (grant_serv_unit->value_dgt[3] << 8) + (grant_serv_unit->value_dgt[2] << 8) + (grant_serv_unit->value_dgt[1] << 8) + (grant_serv_unit->value_dgt[0] << 8); */
-    /*         u_int32_t grant_currency_code = grant_serv_unit->curr_code[3] + (grant_serv_unit->curr_code[2] << 8) + (grant_serv_unit->curr_code[1] << 8) + (grant_serv_unit->curr_code[0] << 8); */
-
-    /*         pp = pp + avp_len - AVP_HEADER_LEN; // move pointer forward */
-    /*         offset += avp_len; // update offset */
-
-    /*         // put buffer in JSON buffer */
-    /*         js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret, */
-    /*                            GRANT_SERV_JSON, grant_value_dgt, grant_currency_code); */
-    /*         /\* printf("json_buffer = %s\n", json_buffer); *\/ */
-    /*         break; */
-
-    /*         // 446 */
-    /*     case USED_SERV_UNT: */
-
-    /*         pp = pp + AVP_HEADER_LEN; */
-    /*         used_serv_unit = (struct used_serv_unit_t *) pp; */
-    /*         u_int64_t used_value_dgt = used_serv_unit->value_dgt[7] + (used_serv_unit->value_dgt[6] << 8) + (used_serv_unit->value_dgt[5] << 8) + (used_serv_unit->value_dgt[4] << 8) + (used_serv_unit->value_dgt[3] << 8) + (used_serv_unit->value_dgt[2] << 8) + (used_serv_unit->value_dgt[1] << 8) + (used_serv_unit->value_dgt[0] << 8); */
-    /*         u_int32_t used_currency_code = used_serv_unit->curr_code[3] + (used_serv_unit->curr_code[2] << 8) + (used_serv_unit->curr_code[1] << 8) + (used_serv_unit->curr_code[0] << 8); */
-
-    /*         pp = pp + avp_len - AVP_HEADER_LEN; // move pointer forward */
-    /*         offset += avp_len; // update offset */
-
-    /*         // put buffer in JSON buffer */
-    /*         js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret, */
-    /*                            USED_SERV_JSON, used_value_dgt, used_currency_code); */
-
-    /*         /\* printf("json_buffer = %s\n", json_buffer); *\/ */
-    /*         break; */
-
-    /*         // 456 */
-    /*     case MULTI_SERV_CC: 	/\* TODO *\/ */
-    /*         break; */
-
-    /*     default: return -3; // error: avp->code unknown */
-
-    /*     } */
     }
 
     js_ret += snprintf((json_buffer + js_ret - 2), (buffer_len - js_ret + 1), " }");
