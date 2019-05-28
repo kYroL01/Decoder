@@ -729,8 +729,6 @@ void callback_proto(u_char *args, const struct pcap_pkthdr *pkt_header, const u_
         break;
     case IPPROTO_SCTP: // SCTP
         printf("\t Protocol: SCTP\n");
-        uint8_t *chunk_data;
-        uint8_t *pp = NULL;
 		int chunk_read = 0;
         sctp_header = (const struct sctp_hdr *)(packet + link_offset + ip_offset);
         sctp_offset = SCTP_HDR_LEN;

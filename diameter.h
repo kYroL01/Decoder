@@ -54,15 +54,20 @@
 /* #define ERROR     0X20 */
 /* #define RETRASM   0X10 */
 
-#define UNK      -1
+#define AVP_HDR_LEN  8
+#define UNK         -1
+
 // Flags
-#define REQ       1
-#define ANSW      0
+#define REQ          1
+#define ANSW         0
 // Classes
-#define DIAM_BASE 0
-#define _3GPP     1
-#define SIP       2
-#define CC        3
+#define DIAM_BASE    0
+#define _3GPP        1
+#define SIP          2
+#define CC           3
+
+// Vendor-ID
+#define _3GPP_ID 10415
 
 /** ############################## COMMANDS ############################## **/
 
@@ -176,6 +181,7 @@ typedef enum {
 
 // Diameter protocol base
 typedef enum {
+    USERNAME       =   1, //
     TIMESTAMP      =  55, //
     AUTH_APP_ID    = 258, //
     VENDOR_SPEC_ID = 260, //
@@ -183,6 +189,8 @@ typedef enum {
     ORIGIN_HOST    = 264, //
     VENDOR_ID      = 266, //
     RES_CODE       = 268, //
+    SESS_SRV_FAIL  = 271, // not TESTED
+    AUTH_REQ_TYPE  = 274, // not TESTED
     AUTH_SESS_ST   = 277, //
     ORIGIN_ST_ID   = 278, //
     DEST_REALM     = 283, //
