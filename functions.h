@@ -59,6 +59,12 @@ void delete_flow_by_key(struct Flow_key *key);
 // DELETE ALL FLOWS
 void delete_all_Flows();
 
+// Function for SCTP parsing
+int sctp_parse_common(const u_int8_t *data, size_t len);
+// Function for SCTP data chunk parsing
+int sctp_parse_chunk(const u_int8_t *data, size_t len);
+
+
 
 /** ##### ##### ##### PROTOCOL FUNCTIONS ##### ##### ##### */
 

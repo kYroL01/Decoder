@@ -143,8 +143,6 @@ struct ipv4_hdr
     u_int32_t ip_dst_addr;      // destination IP address
 } PACK_OFF;
 
-
-
 /* +++++++++++++++++++++++ IPv6 header +++++++++++++++++++++++ */
 struct ipv6_addr
 {
@@ -203,8 +201,6 @@ struct tcp_hdr
     u_int16_t tcp_urgent;     // TCP urgent pointer
 } PACK_OFF;
 
-
-
 /* +++++++++++++++++++++++ UDP header +++++++++++++++++++++++++ */
 struct udp_hdr
 {
@@ -213,6 +209,30 @@ struct udp_hdr
     u_int16_t len;
     u_int16_t check;
 } PACK_OFF;
+
+/* +++++++++++++++++++++++ SCTP header +++++++++++++++++++++++++ */
+enum sctp_chunk_type {
+	SCTP_CHUNK_DATA,
+	SCTP_CHUNK_INIT,
+	SCTP_CHUNK_INIT_ACK,
+	SCTP_CHUNK_SACK,
+};
+
+struct sctp_hdr
+{
+    u_int16_t sctp_src_port;
+    u_int16_t sctp_dst_port;
+    u_int32_t ver_tag;
+    u_int32_t check;
+} PACK_OFF;
+
+struct sctp_chunk_hdr {
+	u_int8_t  type;
+	u_int8_t  flags;
+	u_int16_t len;
+} __attribute__((packed));
+
+
 
 /* general stats filled by every pkts  */
 struct flow_stats

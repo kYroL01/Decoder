@@ -451,6 +451,9 @@ void callback_proto(u_char *args, const struct pcap_pkthdr *pkt_header, const u_
     const struct tcp_hdr *tcp_header = NULL;
     // define udp header
     const struct udp_hdr *udp_header = NULL;
+    // define sctp header
+    const struct sctp_hdr *sctp_header = NULL;
+    const struct sctp_chunk_hdr *sctp_chunk = NULL;
     // define payload container
     const u_char *payload = NULL;
 
@@ -458,9 +461,13 @@ void callback_proto(u_char *args, const struct pcap_pkthdr *pkt_header, const u_
     u_int16_t check, type = 0, pyld_eth_len = 0;
     u_int16_t wifi_len = 0, radiotap_len = 0; /* fc; */
     u_int16_t link_offset = 0, ipv4_offset = 0, ipv6_offset = 0;
-    u_int16_t tcp_offset = 0, udp_offset = 0;
+    u_int16_t tcp_offset = 0, udp_offset = 0, sctp_offset = 0;
     u_int16_t size_payload = 0;
+    uint8_t is_sctp = 0;
+    u_int16_t src_port = 0;
+    u_int16_t dst_port = 0;
     u_int8_t s = fcp->save;
+    uint32_t Len = pkt_header->len;
 
     // check if a SIGINT is arrived
     if(signal_flag){
@@ -720,13 +727,43 @@ void callback_proto(u_char *args, const struct pcap_pkthdr *pkt_header, const u_
         // update stats
         fcp->stats.udp_pkts++;
         break;
+    case IPPROTO_SCTP: // SCTP
+        printf("\t Protocol: SCTP\n");
+        uint8_t *chunk_data;
+        uint8_t *pp = NULL;
+		int chunk_read = 0;
+        sctp_header = (const struct sctp_hdr *)(packet + link_offset + ip_offset);
+        sctp_offset = SCTP_HDR_LEN;
+        /* pp = sctp_header + sctp_offset; */
+        chunk_read = link_offset + ip_offset + sctp_offset;
+
+        while(chunk_read < Len) {
+            sctp_chunk = (const struct sctp_chunk_hdr *)(packet + link_offset +
+                                                         ip_offset + sctp_offset);
+            chunk_read += ntohs(sctp_chunk->len);
+            sctp_offset += 16;
+        }
+        /* TODO: FINISH */
+        is_sctp = 1;
+        break;
+
     default:
         printf("\t Protocol: unknown\n");
         return;
     }
 
+    u_int16_t l4_offset = 0;
     // set l4 offset
-    u_int16_t l4_offset = (ip_proto == IPPROTO_TCP) ? tcp_offset : udp_offset;
+    if(is_sctp == 0) {
+        l4_offset = (ip_proto == IPPROTO_TCP) ? tcp_offset : udp_offset;
+        (ip_proto == IPPROTO_TCP) ? (src_port = ntohs(tcp_header->tcp_src_port)) : (src_port = ntohs(udp_header->udp_src_port));
+        (ip_proto == IPPROTO_TCP) ? (dst_port = ntohs(tcp_header->tcp_dst_port)) : (dst_port = ntohs(udp_header->udp_dst_port));
+    }
+    else {
+        l4_offset = sctp_offset;
+        src_port = ntohs(sctp_header->sctp_src_port);
+        dst_port = ntohs(sctp_header->sctp_dst_port);
+    }
 
     // decode payload
     payload = ((u_char *)(packet + link_offset + ip_offset + l4_offset));
@@ -735,6 +772,8 @@ void callback_proto(u_char *args, const struct pcap_pkthdr *pkt_header, const u_
     size_payload = pkt_header->len - ip_offset - l4_offset - link_offset;
     if(size_payload > 0)
         printf("\t Payload (%d bytes):\n", size_payload);
+
+
 
     /**
        This is the function to process a packet.
@@ -747,8 +786,8 @@ void callback_proto(u_char *args, const struct pcap_pkthdr *pkt_header, const u_
                            ip_version,
                            ipv4_header,
                            ipv6_header,
-                           (ip_proto == IPPROTO_TCP) ? ntohs(tcp_header->tcp_src_port) : ntohs(udp_header->udp_src_port),
-                           (ip_proto == IPPROTO_TCP) ? ntohs(tcp_header->tcp_dst_port) : ntohs(udp_header->udp_dst_port),
+                           src_port,
+                           dst_port,
                            ip_proto,
                            fcp,
                            s

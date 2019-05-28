@@ -1,20 +1,20 @@
 /**
    Definition of macro and header size
-   
+
    decoder - decode TLS/SSL traffic - save handshake and extract certificate
    Copyright (C) 2016-2017 Michele Campus <fci1908@gmail.com>
-   
+
    This file is part of decoder.
-   
+
    decoder is free software: you can redistribute it and/or modify it under the
    terms of the GNU General Public License as published by the Free Software
    Foundation, either version 3 of the License, or (at your option) any later
    version.
-   
+
    decoder is distributed in the hope that it will be useful, but WITHOUT ANY
    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
    A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-   
+
    You should have received a copy of the GNU General Public License along with
    decoder. If not, see <http://www.gnu.org/licenses/>.
 **/
@@ -39,6 +39,8 @@
 #define IPV6_HDR_LEN                40
 /* UDP header length */
 #define UDP_HDR_LEN                  8
+/* SCTP header len */
+#define SCTP_HDR_LEN                12
 
 /* Ethernet protocol ID's from Ether Type field */
 #define	ETHERTYPE_ARP		0x0806		/* Address resolution */
