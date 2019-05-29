@@ -33,17 +33,28 @@ static char *username_id;
 static char *session_id;
 static char *vendor_spec_id;
 static char *auth_sess_st;
+static char *auth_req_type;
 static char *org_host;
 static char *dst_host;
 static char *org_realm;
 static char *dst_realm;
+static char *sess_fail_type;
+static char *pub_id;
+static char *visit_net_id;
+static char *srv_name;
+static char *user_data;
+static char *exp_res;
 static u_int32_t auth_app_id;
-static u_int32_t auth_req_type;
 static u_int32_t vend_id;
 static u_int32_t res_code;
 static u_int32_t orgst_id;
-static u_int32_t sess_fail_type;
+static u_int32_t exp_res_code;
 char buff_tm[30] = {0};
+
+/* static inline CHECK_BIT(var, k) { */
+/*     int i = ((var) & (1<<(k-1))); */
+/*     return i; */
+/* } */
 
 /**
    check if the passed variable is a diameter command
@@ -227,8 +238,9 @@ int diameter_parser(const u_char *packet, int size_payload, char *json_buffer, i
         u_int8_t  flag;
         u_int16_t avp_len;
         u_int16_t l;
+        u_int32_t _vendor_id = 0;
         u_int8_t  padd = 0;
-        u_int32_t vendor_id;
+        u_int32_t unk = 0;
 
         // Header AVP
         struct avp_header_t *avp = (struct avp_header_t *) start;
@@ -242,22 +254,25 @@ int diameter_parser(const u_char *packet, int size_payload, char *json_buffer, i
         // move pointer forward and increase the offset
         start += AVP_HDR_LEN;
         offset += AVP_HDR_LEN;
+        unk += AVP_HDR_LEN;
 
         // check AVP flag - search the presence of Vendor-ID field (4 bytes optional)
-        if(CHECK_BIT(avp->flag, 8) == 1) {
-            vendor_id = start[3] + (start[2] << 8) + (start[1] << 8) + (start[0] << 8);
-            // put buffer in JSON buffer
-            js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                               "\"vendor-ID\":%u, ", vendor_id);
+        if(CHECK_BIT(avp->flag, 8) == 128) {
+            /* vendor_id = start[3] + (start[2] << 8) + (start[1] << 8) + (start[0] << 8); */
+            /* // put buffer in JSON buffer */
+            /* js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret, */
+            /*                    "\"vendor-ID\":%u, ", vendor_id); */
             start += 4;
             offset += 4;
+            unk += 4;
+            _vendor_id = 4;
         }
 
         switch(avp_code) {
 
         case USERNAME: {
 
-            u_int16_t username_len = avp_len - AVP_HEADER_LEN;
+            u_int16_t username_len = avp_len - AVP_HEADER_LEN - _vendor_id;
             username_id = calloc(username_len, sizeof(char));
             memcpy(username_id, start, username_len);
 
@@ -278,7 +293,7 @@ int diameter_parser(const u_char *packet, int size_payload, char *json_buffer, i
 
         case SESS_ID: {
 
-            u_int16_t sess_id_len = avp_len - AVP_HEADER_LEN;
+            u_int16_t sess_id_len = avp_len - AVP_HEADER_LEN - _vendor_id;
             session_id = calloc(sess_id_len, sizeof(char));
             memcpy(session_id, start, sess_id_len);
 
@@ -299,7 +314,7 @@ int diameter_parser(const u_char *packet, int size_payload, char *json_buffer, i
 
         case VENDOR_SPEC_ID: { // Grouped
 
-            u_int16_t vend_spec_id_len = avp_len - AVP_HEADER_LEN;
+            u_int16_t vend_spec_id_len = avp_len - AVP_HEADER_LEN - _vendor_id;
             vendor_spec_id = calloc(vend_spec_id_len, sizeof(char));
             memcpy(vendor_spec_id, start, vend_spec_id_len);
 
@@ -324,7 +339,7 @@ int diameter_parser(const u_char *packet, int size_payload, char *json_buffer, i
 
         case AUTH_SESS_ST: {
 
-            u_int16_t auth_sess_len = avp_len - AVP_HEADER_LEN;
+            u_int16_t auth_sess_len = avp_len - AVP_HEADER_LEN - _vendor_id;
 
             // check for padding
             l = avp_len;
@@ -350,7 +365,7 @@ int diameter_parser(const u_char *packet, int size_payload, char *json_buffer, i
 
         case AUTH_REQ_TYPE: {
 
-            u_int16_t auth_req_len = avp_len - AVP_HEADER_LEN;
+            u_int16_t auth_req_len = avp_len - AVP_HEADER_LEN - _vendor_id;
 
             // check for padding
             l = avp_len;
@@ -377,7 +392,7 @@ int diameter_parser(const u_char *packet, int size_payload, char *json_buffer, i
 
         case SESS_SRV_FAIL: {
 
-            u_int16_t sess_fail_len = avp_len - AVP_HEADER_LEN;
+            u_int16_t sess_fail_len = avp_len - AVP_HEADER_LEN - _vendor_id;
 
             // check for padding
             l = avp_len;
@@ -405,7 +420,7 @@ int diameter_parser(const u_char *packet, int size_payload, char *json_buffer, i
 
         case ORIGIN_HOST: {
 
-            u_int16_t org_host_len = avp_len - AVP_HEADER_LEN;
+            u_int16_t org_host_len = avp_len - AVP_HEADER_LEN - _vendor_id;
             org_host = calloc(org_host_len, sizeof(char));
             memcpy(org_host, start, org_host_len);
 
@@ -427,7 +442,7 @@ int diameter_parser(const u_char *packet, int size_payload, char *json_buffer, i
 
         case DEST_HOST: {
 
-            u_int16_t dst_host_len = avp_len - AVP_HEADER_LEN;
+            u_int16_t dst_host_len = avp_len - AVP_HEADER_LEN - _vendor_id;
             dst_host = calloc(dst_host_len, sizeof(char));
             memcpy(dst_host, start, dst_host_len);
 
@@ -449,7 +464,7 @@ int diameter_parser(const u_char *packet, int size_payload, char *json_buffer, i
 
         case ORIGIN_REALM: {
 
-            u_int16_t org_realm_len = avp_len - AVP_HEADER_LEN;
+            u_int16_t org_realm_len = avp_len - AVP_HEADER_LEN - _vendor_id;
             org_realm = calloc(org_realm_len, sizeof(char));
             memcpy(org_realm, start, org_realm_len);
 
@@ -471,7 +486,7 @@ int diameter_parser(const u_char *packet, int size_payload, char *json_buffer, i
 
         case DEST_REALM: {
 
-            u_int16_t dst_realm_len = avp_len - AVP_HEADER_LEN;
+            u_int16_t dst_realm_len = avp_len - AVP_HEADER_LEN - _vendor_id;
             dst_realm = calloc(dst_realm_len, sizeof(char));
             memcpy(dst_realm, start, dst_realm_len);
 
@@ -493,7 +508,7 @@ int diameter_parser(const u_char *packet, int size_payload, char *json_buffer, i
 
         case AUTH_APP_ID: {
 
-            u_int16_t auth_app_len = avp_len - AVP_HEADER_LEN;
+            u_int16_t auth_app_len = avp_len - AVP_HEADER_LEN - _vendor_id;
             auth_app_id = start[3] + (start[2] << 8) + (start[1] << 8) + (start[0] << 8);
             // TODO: value is not correct. Must find a way to calculate it right for 3gpp
 
@@ -515,7 +530,7 @@ int diameter_parser(const u_char *packet, int size_payload, char *json_buffer, i
 
         case VENDOR_ID: {
 
-            u_int16_t vend_len = avp_len - AVP_HEADER_LEN;
+            u_int16_t vend_len = avp_len - AVP_HEADER_LEN - _vendor_id;
             vend_id = start[3] + (start[2] << 8) + (start[1] << 8) + (start[0] << 8);
 
             // check for padding
@@ -529,14 +544,19 @@ int diameter_parser(const u_char *packet, int size_payload, char *json_buffer, i
             offset += (vend_len + padd);  // update offset
 
             // put buffer in JSON buffer
-            js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                               "\"vendor-ID\":%u, ", vend_id);
+            if(vend_id == _3GPP_ID)
+                js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
+                                   "\"vendor-ID\":%s, ", "3GPP");
+            else
+                js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
+                                   "\"vendor-ID\":%u, ", vend_id);
             break;
         }
 
         case RES_CODE: {
 
-            u_int16_t res_len = avp_len - AVP_HEADER_LEN;
+            char rc_buff[30] = {0};
+            u_int16_t res_len = avp_len - AVP_HEADER_LEN - _vendor_id;
             res_code = start[3] + (start[2] << 8) + (start[1] << 8) + (start[0] << 8);
 
             // check for padding
@@ -549,15 +569,21 @@ int diameter_parser(const u_char *packet, int size_payload, char *json_buffer, i
             start += (res_len + padd);   // move pointer forward
             offset += (res_len + padd);  // update offset
 
+            if(res_code >= 1000 && res_code < 2000) strncpy(rc_buff, "Informational", strlen("Informational"));
+            else if(res_code >= 2000 && res_code < 3000) strncpy(rc_buff, "Success", strlen("Success"));
+            else if(res_code >= 3000 && res_code < 4000) strncpy(rc_buff, "Protocol Errors", strlen("Protocol Errors"));
+            else if(res_code >= 4000 && res_code < 5000) strncpy(rc_buff, "Transient Failures", strlen("Transient Failures"));
+            else if(res_code >= 5000 && res_code < 6000) strncpy(rc_buff, "Permanent Failure", strlen("Permanent Failure"));
+
             // put buffer in JSON buffer
             js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                               "\"res-code\":%u, ", res_code);
+                               "\"res-code\":%s, ", rc_buff);
             break;
         }
 
         case ORIGIN_ST_ID: {
 
-            u_int16_t orgst_len = avp_len - AVP_HEADER_LEN;
+            u_int16_t orgst_len = avp_len - AVP_HEADER_LEN - _vendor_id;
             orgst_id = start[3] + (start[2] << 8) + (start[1] << 8) + (start[0] << 8);
 
             // check for padding
@@ -578,7 +604,7 @@ int diameter_parser(const u_char *packet, int size_payload, char *json_buffer, i
 
         case TIMESTAMP: {
 
-            u_int16_t time_len = avp_len - AVP_HEADER_LEN;
+            u_int16_t time_len = avp_len - AVP_HEADER_LEN - _vendor_id;
             /* memset(buff_tm, 0, time_len); */
             /* memcpy(buff_tm, start, time_len+1); */
             time_t tm = start[3] + (start[2] << 8) + (start[1] << 8) + (start[0] << 8); /* CHECK */
@@ -601,10 +627,150 @@ int diameter_parser(const u_char *packet, int size_payload, char *json_buffer, i
                                "\"event-timestamp\":""%s"", ", buff_tm);
             break;
         }
+
+        case EXP_RES: { // Grouped
+
+            u_int16_t exp_res_len = avp_len - AVP_HEADER_LEN - _vendor_id;
+            exp_res = calloc(exp_res_len, sizeof(char));
+            memcpy(exp_res, start, exp_res_len);
+
+            // check for padding
+            l = avp_len;
+            padd = 0;
+            while(l % 4 != 0) {
+                padd++;	l++;
+            }
+
+            js_ret += snprintf((json_buffer + js_ret), buffer_len, "{ \"experimental-result\":{ ");
+
+            // Header AVP
+            struct avp_header_t *avp = (struct avp_header_t *) start;
+            // calculate AVP code
+            avp_code = ntohl(avp->code);
+            // calculate AVP length
+            avp_len = avp->length[2] + (avp->length[1] << 8) + (avp->length[0] << 8);
+
+            break;
+        }
+
+        case EXP_RES_CODE: {
+
+            u_int16_t exp_res_code_len = avp_len - AVP_HEADER_LEN - _vendor_id;
+            exp_res_code = start[3] + (start[2] << 8) + (start[1] << 8) + (start[0] << 8);
+
+            // check for padding
+            l = avp_len;
+            padd = 0;
+            while(l % 4 != 0) {
+                padd++;	l++;
+            }
+
+            start += (exp_res_code_len + padd);   // move pointer forward
+            offset += (exp_res_code_len + padd);  // update offset
+
+            // put buffer in JSON buffer
+            js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
+                               "\"Exp-Result-Code\":%u, ", exp_res_code);
+            break;
+        }
+
+            // 3GPP
+        case PUB_ID: {
+
+            u_int16_t pub_id_len = avp_len - AVP_HEADER_LEN - _vendor_id;
+            pub_id = calloc(pub_id_len, sizeof(char));
+            memcpy(pub_id, start, pub_id_len);
+
+            // check for padding
+            l = avp_len;
+            padd = 0;
+            while(l % 4 != 0) {
+                padd++;	l++;
+            }
+
+            start += (pub_id_len + padd);   // move pointer forward
+            offset += (pub_id_len + padd);  // update offset
+
+            // put buffer in JSON buffer
+            js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
+                               "\"public-identity\":%s, ", pub_id);
+            break;
+        }
+
+        case VISIT_NET_ID: {
+
+            u_int16_t visit_net_id_len = avp_len - AVP_HEADER_LEN - _vendor_id;
+            visit_net_id = calloc(visit_net_id_len, sizeof(char));
+            memcpy(visit_net_id, start, visit_net_id_len);
+
+            // check for padding
+            l = avp_len;
+            padd = 0;
+            while(l % 4 != 0) {
+                padd++;	l++;
+            }
+
+            start += (visit_net_id_len + padd);   // move pointer forward
+            offset += (visit_net_id_len + padd);  // update offset
+
+            // put buffer in JSON buffer
+            js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
+                               "\"visit-network-id\":%s, ", visit_net_id);
+            break;
+        }
+
+        case SERVER_NAME: {
+
+            u_int16_t srv_name_len = avp_len - AVP_HEADER_LEN - _vendor_id;
+            srv_name = calloc(srv_name_len, sizeof(char));
+            memcpy(srv_name, start, srv_name_len);
+
+            // check for padding
+            l = avp_len;
+            padd = 0;
+            while(l % 4 != 0) {
+                padd++;	l++;
+            }
+
+            start += (srv_name_len + padd);   // move pointer forward
+            offset += (srv_name_len + padd);  // update offset
+
+            // put buffer in JSON buffer
+            js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
+                               "\"server-name\":%s, ", srv_name);
+            break;
+        }
+
+        case USER_DATA: {
+
+            u_int16_t user_data_len = avp_len - AVP_HEADER_LEN - _vendor_id;
+            user_data = calloc(user_data_len, sizeof(char));
+            memcpy(user_data, start, user_data_len);
+
+            // check for padding
+            l = avp_len;
+            padd = 0;
+            while(l % 4 != 0) {
+                padd++;	l++;
+            }
+
+            start += (user_data_len + padd);   // move pointer forward
+            offset += (user_data_len + padd);  // update offset
+
+            // put buffer in JSON buffer
+            js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
+                               "\"user-data\":%s, ", user_data);
+            break;
+        }
+
+        default: {
+            start += (avp_len - unk);
+            offset += (avp_len - unk);
+        }
         } // switch
     }
 
-    js_ret += snprintf((json_buffer + js_ret - 2), (buffer_len - js_ret + 1), " }}");
+    js_ret += snprintf((json_buffer + js_ret - 2), (buffer_len - js_ret + 1), " }}}");
 
     return 0; // OK
 }

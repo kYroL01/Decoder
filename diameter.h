@@ -195,7 +195,9 @@ typedef enum {
     ORIGIN_ST_ID   = 278, //
     DEST_REALM     = 283, //
     DEST_HOST      = 293, //
-    ORIGIN_REALM   = 296  //
+    ORIGIN_REALM   = 296, //
+    EXP_RES        = 297, //
+    EXP_RES_CODE   = 298, //
 } avp_code_t;
 
 // 3GPP
@@ -203,7 +205,14 @@ typedef enum {
     CHARG_ID_3GPP  =   2,
     PDP_3GPP_TYPE  =   3,
     SGSN_3GPP_IPv6 =  15,
-    PKT_FILT_3GPP  =  25
+    PKT_FILT_3GPP  =  25,
+    /* Note: The AVP codes from 1 to 255 are reserved for backwards compatibility
+       with 3GPP RADIUS Vendor Specific Attributes */
+    VISIT_NET_ID   = 600,
+    PUB_ID         = 601,
+    SERVER_NAME    = 602,
+    USER_DATA      = 606,
+
 } avp_code_3gpp_t;
 
 // Credit Control
