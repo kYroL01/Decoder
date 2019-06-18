@@ -57,6 +57,27 @@ char buff_tm[30] = {0};
 /* } */
 
 /**
+   Swap endian value of passed variable
+   @param  number to be change
+   @return number after endian swap
+**/
+static u_int32_t swap_endian(u_int32_t num) {
+
+    // Swap endian (big to little) or (little to big)
+    uint32_t z0, z1, z2, z3;
+    uint32_t res;
+
+    z0 = (num & 0x000000ff) << 24;
+    z1 = (num & 0x0000ff00) << 8;
+    z2 = (num & 0x00ff0000) >> 8;
+    z3 = (num & 0xff000000) >> 24;
+
+    res = z0 | z1 | z2 | z3;
+
+    return res;
+}
+
+/**
    check if the passed variable is a diameter command
    @param  command code to check
    @return the num >= 0 associated to class of command (Base, 3GPP, SIP, CC) and #com_string associated to com_code
@@ -72,17 +93,61 @@ static int check_command(u_int16_t com_code, const char* com_string) {
         return CC;
     }
     // check for DIAM_BASE command
-    for (i = AC, j = 0; i <= ST; i++, j++) {
-        if(i == com_code) {
-            snprintf(com_string, 3, "%s", com_diam_base_arr[j]);
-            return DIAM_BASE;
-        }
+    switch(com_code) {
+      case CE: {
+          snprintf(com_string, 3, "%s", com_diam_base_arr[0]);
+          return DIAM_BASE;
+      }
+      case RA: {
+          snprintf(com_string, 3, "%s", com_diam_base_arr[1]);
+          return DIAM_BASE;
+      }
+      case AC: {
+          snprintf(com_string, 3, "%s", com_diam_base_arr[2]);
+          return DIAM_BASE;
+      }
+      case AS: {
+          snprintf(com_string, 3, "%s", com_diam_base_arr[3]);
+          return DIAM_BASE;
+      }
+      case ST: {
+          snprintf(com_string, 3, "%s", com_diam_base_arr[4]);
+          return DIAM_BASE;
+      }
+      case DW: {
+          snprintf(com_string, 3, "%s", com_diam_base_arr[5]);
+          return DIAM_BASE;
+      }
+      case DP: {
+          snprintf(com_string, 3, "%s", com_diam_base_arr[6]);
+          return DIAM_BASE;
+      }
     }
+
+
+
+    /* for (i = CE, j = 0; i <= RA; i++, j++) { */
+    /*     if(i == com_code) { */
+    /*         snprintf(com_string, 3, "%s", com_diam_base_arr[j]); */
+    /*         return DIAM_BASE; */
+    /*     } */
+    /* } */
+    /* for (i = AS, j = 0; i <= ; i++, j++) { */
+    /*     if(i == com_code) { */
+    /*         snprintf(com_string, 3, "%s", com_diam_base_arr[j]); */
+    /*         return DIAM_BASE; */
+    /*     } */
+    /* }     */
+
+
     // check for 3GPP command
     for (i = UA, j = 0; i <= EC; i++, j++) {
         if(i == com_code) {
             /* printf("string = %s\n", com_diam_base_arr[j]); */
-            snprintf(com_string, 3, "%s", com_diam_3gpp_arr[j]);
+            if(i <= MP)
+                snprintf(com_string, 3, "%s", com_diam_3gpp_arr[j]);
+            else
+                snprintf(com_string, 3, "%s", com_diam_3gpp_arr[j-4]);
             return _3GPP;
         }
     }
@@ -106,6 +171,9 @@ static int check_command(u_int16_t com_code, const char* com_string) {
 static int check_appID(u_int32_t app_id) {
 
     int i;
+
+    //swap endian
+
 
     // check for CREDIT_CTRL app ID
     if(app_id == CREDIT_CTRL) return CC;
@@ -143,9 +211,7 @@ int diameter_parser(const u_char *packet, int size_payload, char *json_buffer, i
     // string for JSON command and app IDs
     const char com_string[5] = {0};
     const char app_string[5] = {0};
-    // start and end pointers
-    /* const u_char *start; */
-    /* const u_char *end; */
+
 
     // check param
     if(!packet || size_payload == 0) {
@@ -179,7 +245,9 @@ int diameter_parser(const u_char *packet, int size_payload, char *json_buffer, i
     }
 
     // check if Applicaption ID is correct
-    app_id = diameter->app_id[3] + (diameter->app_id[2] << 8) + (diameter->app_id[1] << 8) + (diameter->app_id[0] << 8);
+    /* app_id = diameter->app_id[3] + (diameter->app_id[2] << 8) + (diameter->app_id[1] << 8) + (diameter->app_id[0] << 8); */
+    app_id = diameter->app_id;
+    app_id = swap_endian(app_id);
     classApp = check_appID(app_id);
     if(classApp == UNK) {
         fprintf(stderr, "::Warning:: Command unknown for Diameter protocol\n");
@@ -201,6 +269,9 @@ int diameter_parser(const u_char *packet, int size_payload, char *json_buffer, i
     else if(classCom == SIP) snprintf(class, (strlen("SIP")+1), "SIP");
     else if(classCom == CC) snprintf(class, (strlen("Credit Control")+1), "Credit Control");
     else snprintf(class, (strlen("Unknown")+1), "Unknown");
+
+    // Write correct string values for diameter header
+
 
 
     /*** CREATE JSON BUFFER ***/

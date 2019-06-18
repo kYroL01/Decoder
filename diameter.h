@@ -77,13 +77,13 @@
 **/
 // Diameter protocol base
 typedef enum {
+    CE = 257,
+    RA = 258,
     AC = 271,
     AS = 274,
-    CE = 257,
+    ST = 275,
     DW = 280,
-    DP = 282,
-    RA = 258,
-    ST = 275
+    DP = 282
 } com_diam_base_t;
 
 // 3GPP
@@ -285,7 +285,7 @@ struct diameter_header_t
     u_int8_t  length[3];
     u_int8_t  flags;
     u_int8_t  com_code[3];
-    u_int8_t  app_id[4];
+    u_int32_t app_id;
     u_int32_t hop_id;
     u_int32_t end_id;
 };
@@ -300,56 +300,5 @@ struct avp_header_t
     u_int8_t  flag;
     u_int8_t  length[3];  /* Values not multiple of four-octets is followed by padding to have 32-bit boundary for the next AVP (if exists) */
 };
-
-/* // CREDIT CONTROL */
-/* // Requested-service-unit struct */
-/* struct req_serv_unit_t */
-/* { */
-/*   struct avp_header_t cc_money_head;   // 413 */
-/*   struct avp_header_t cc_unit_val;     // 445 */
-/*   struct avp_header_t value_dgt_head;  // 447 */
-/*   u_int8_t value_dgt[8]; */
-/*   struct avp_header_t cc_code_head;    // 425 */
-/*   u_int8_t curr_code[4]; */
-/*   /\* Maybe incomplete *\/ */
-/* }; */
-
-/* // Granted-service-unit struct */
-/* struct grant_serv_unit_t */
-/* { */
-/*   struct avp_header_t cc_money_head;   // 413 */
-/*   struct avp_header_t cc_unit_val;     // 445 */
-/*   struct avp_header_t value_dgt_head;  // 447 */
-/*   u_int8_t value_dgt[8]; */
-/*   struct avp_header_t cc_code_head;    // 425 */
-/*   u_int8_t curr_code[4]; */
-/*   /\* Maybe incomplete *\/ */
-/* }; */
-
-/* // Used-service-unit struct */
-/* struct used_serv_unit_t */
-/* { */
-/*   struct avp_header_t cc_money_head;   // 413 */
-/*   struct avp_header_t cc_unit_val;     // 445 */
-/*   struct avp_header_t value_dgt_head;  // 447 */
-/*   u_int8_t value_dgt[8]; */
-/*   struct avp_header_t cc_code_head;    // 425 */
-/*   u_int8_t curr_code[4]; */
-/*   /\* Maybe incomplete *\/ */
-/* }; */
-/* /\******** *************** ********\/ */
-
-/* List of ALL the structures for the AVP information block TODO: moved to .c*/
-/* char* serv_contx_id;                       // 461 */
-/* u_int32_t cc_req_num;                      // 415 */
-/* u_int32_t cc_req_type;                     // 416 (1 - 4) */
-/* u_int32_t org_state_id;                    // 278 */
-/* u_int32_t valid_time;                      // 448 */
-/* struct req_serv_unit_t *req_serv_unit;     // 437 */
-/* struct grant_serv_unit_t *grant_serv_unit; // 431 */
-/* struct used_serv_unit_t *used_serv_unit;   // 446 */
-/* /\*** TODO finish to add fields here ***\/ */
-
-/******** *************** ********/
 
 #endif
