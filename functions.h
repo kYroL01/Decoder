@@ -128,4 +128,16 @@ struct msg_fake_sip * ngcp_parser(const u_char * payload,
 int rtsp_parser(const u_char *packet, int size_payload, char *json_buffer, int buffer_len);
 
 
+/**
+   hash function for integer number
+   thanks to https://stackoverflow.com/a/12996028/859453
+ */
+static unsigned int hash_ID(unsigned int ID)
+{
+    ID = ((ID >> 16) ^ ID) * 0x45d9f3b;
+    ID = ((ID >> 16) ^ ID) * 0x45d9f3b;
+    ID = (ID >> 16) ^ ID;
+    return ID;
+}
+
 #endif
