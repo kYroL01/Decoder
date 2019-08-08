@@ -49,7 +49,7 @@ volatile sig_atomic_t signal_flag;
 static void print_usage()
 {
   fprintf( stderr , "Usage:\n" );
-  fprintf( stderr , "      decoder -i <device> | -p <file> |  [-w <file>]\n");
+  fprintf( stderr , "      decoder -i <device> | -p <file>\n");
   fprintf( stderr , "    -i <device>  : use <device> for live capture\n" );
   fprintf( stderr , "    -p <file>    : open <file> and read packets\n" );
   /* fprintf( stderr , "    -n <threads> : set number of thread (>1)\n" ); */
