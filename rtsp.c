@@ -1,7 +1,6 @@
 /**
    RTSP dissector
 
-   decoder: parsing and classification of traffic
    Copyright (C) 2016-2019 Michele Campus <michelecampus5@gmail.com>
 
    Based on code from https://github.com/moonlight-stream/moonlight-common-c/blob/master/src/RtspParser.c

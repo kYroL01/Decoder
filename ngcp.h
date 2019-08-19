@@ -1,8 +1,7 @@
 /**
    Header file for ncgp parser
 
-   decoder: parsing and classification of traffic
-   Copyright (C) 2016-2018 Michele Campus <fci1908@gmail.com>
+   Copyright (C) 2016-2019 Michele Campus <michelecampus5@gmail.com>
 
    This file is part of decoder.
 
