@@ -27,9 +27,11 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define RTSP_SUCCESS 0
+#define RTSP_SUCCESS          0
 #define RTSP_ERROR_NO_MEMORY -1
 #define RTSP_ERROR_MALFORMED -2
+
+#define MAGIC 0x24
 
 /**
    :: RTSP message type ::
@@ -37,7 +39,7 @@
    - Request (from Client to Server)
    - Response (from Server to Client)
 **/
-#define REQUEST 0
+#define REQUEST  0
 #define RESPONSE 1
 
 /**

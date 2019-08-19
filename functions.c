@@ -27,11 +27,15 @@
 #include <arpa/inet.h>
 #include <errno.h>
 #include <signal.h>
+#include "globals.h"
 #include "functions.h"
 #include "structures.h"
 #include "uthash.h"
 
 #define JSON_BUFFER_LEN 5000
+
+// globals
+int is_interleaved = 0;
 
 /* ### Declaration of HASH TABLE ### */
 extern struct Hash_Table *HT_Flows;
@@ -285,6 +289,9 @@ static unsigned int process_packet(const u_char * payload,
                               JSON_BUFFER_LEN);
             if(ret == -1) {
                 fprintf(stderr, "Not an rtsp packet\n");
+            }
+            else if(ret == -2) {
+                fprintf(stderr, "ERROR on parsing interleaved frame\n");
             }
             else {
                 ret = 5;

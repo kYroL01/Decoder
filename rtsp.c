@@ -23,6 +23,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
+#include <arpa/inet.h>
+#include "globals.h"
 #include "rtsp.h"
 
 // Check if String s begins with the given prefix
@@ -44,6 +47,9 @@ static int starts_with(const char *s, const char *prefix) {
 int rtsp_parser(const u_char *packet, int size_payload, char *json_buffer, int buffer_len) {
 
     int ret = -1, js_ret = 0;
+    int total = 0;
+    uint16_t l_inter = 0;
+    char *p = packet;
 
     // check param
     if(!packet || size_payload == 0) {
@@ -54,6 +60,29 @@ int rtsp_parser(const u_char *packet, int size_payload, char *json_buffer, int b
     // alloc memory for struct msg. This struct is filled after parsing
     rtsp_message *msg = malloc(1 * sizeof(rtsp_message));
 
+    /* Check for Magic byte (interleaved pkt) */
+    /**
+       NOTE: now we just parsed the RTP pkt; 
+       then we need to export in some way
+     **/
+    if(*p == MAGIC) {
+        if(is_interleaved) {
+            for(total = 0; total < size_payload; total += (l_inter + 4)) {
+                p += 2; // magic + channel
+                l_inter = ntohs((*(p+1) << 8) + *p);
+                p += 2; // length
+                // copy the buffer (RTP pkt)
+                char *interleaved_buff = malloc(l_inter * sizeof(malloc));
+                memcpy(interleaved_buff, p, l_inter);
+                p += l_inter;
+                if(l_inter != 0)
+                    printf("RTSP Interleaved Frame found - RTP packet saved in buffer (length = %d)\n", l_inter);
+            }
+        }
+        else return -2; // ERROR - found MAGIC but not interleaved in SETUP
+    }
+    
+    else {
     ret = rtsp_message_parser(msg, (char*) packet, size_payload);
 
     /**
@@ -115,7 +144,8 @@ int rtsp_parser(const u_char *packet, int size_payload, char *json_buffer, int b
     js_ret += snprintf((json_buffer + js_ret - 1), (buffer_len - js_ret + 1), " }");
 
     if(ret != 0) return -1;
-
+    }
+    
     return 0;
 }
 
@@ -338,6 +368,13 @@ int rtsp_message_parser(rtsp_message *msg, char *rtspMessage, int length) {
     if(!message_ended) {
         exit_code = RTSP_ERROR_MALFORMED;
         goto ExitFailure;
+    }
+
+    /* Check if we will expect interleaved binary data (RTSP Interleaved Frame) */
+    if(flag == REQUEST && (!strncmp(command, "SETUP", strlen("SETUP")))) {
+        // parse command "transport" to find string "interleaved"
+        if(strstr(transport, "interleaved"))
+            is_interleaved = 1;
     }
 
     /*** Create the MESSAGE with extracted meaningful fields ***/
