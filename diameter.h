@@ -30,7 +30,7 @@
 #include <time.h>
 
 /* Definition of Diameter common info JSON */
-#define DIAMETER_HEADER_JSON "\"diameter_info\": { [\"class\":\"%s\",\"type\":\"%s\",\"command\":\"%s\",\"app-ID\":%d] }"
+#define DIAMETER_HEADER_JSON "\"diameter_info\": {\"class\":\"%s\",\"type\":\"%s\",\"command\":\"%s\",\"app-ID\":%d,"
 
 /* Definition of AVPs JSON TODO */
 // Basic DIAMETER

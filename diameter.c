@@ -209,8 +209,8 @@ int diameter_parser(const u_char *packet, int size_payload, char *json_buffer, i
     char type[20] = {0};
     char class[20] = {0};
     // string for JSON command and app IDs
-    const char com_string[5] = {0};
-    const char app_string[5] = {0};
+    const char com_string[8] = {0};
+    const char app_string[8] = {0};
 
 
     // check param
@@ -300,7 +300,7 @@ int diameter_parser(const u_char *packet, int size_payload, char *json_buffer, i
     /**
        Create json buffer
     **/
-    js_ret += snprintf((json_buffer + js_ret), buffer_len, "{ \"diameter_report_information\":{ ");
+    /* js_ret += snprintf((json_buffer + js_ret), buffer_len, "{ \"diameter_report_information\":{ "); */
 
     while(start < end && offset < length) {
 
@@ -358,7 +358,7 @@ int diameter_parser(const u_char *packet, int size_payload, char *json_buffer, i
 
             // put buffer in JSON buffer
             js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                               "\"user-name\":%s, ", username_id);
+                               "\"user-name\":%s,", username_id);
             break;
         }
 
@@ -379,7 +379,7 @@ int diameter_parser(const u_char *packet, int size_payload, char *json_buffer, i
 
             // put buffer in JSON buffer
             js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                               "\"session-ID\":%s, ", session_id);
+                               "\"session-ID\":%s,", session_id);
             break;
         }
 
@@ -396,7 +396,7 @@ int diameter_parser(const u_char *packet, int size_payload, char *json_buffer, i
                 padd++;	l++;
             }
 
-            js_ret += snprintf((json_buffer + js_ret), buffer_len, "{ \"vendor-spec-ID\":{ ");
+            /* js_ret += snprintf((json_buffer + js_ret), buffer_len, "{ \"vendor-spec-ID\":{ "); */
 
             // Header AVP
             struct avp_header_t *avp = (struct avp_header_t *) start;
@@ -430,7 +430,7 @@ int diameter_parser(const u_char *packet, int size_payload, char *json_buffer, i
 
             // put buffer in JSON buffer
             js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                               "\"auth-sess-st\":%s, ", auth_sess_st);
+                               "\"auth-sess-st\":%s,", auth_sess_st);
             break;
         }
 
@@ -457,7 +457,7 @@ int diameter_parser(const u_char *packet, int size_payload, char *json_buffer, i
 
             // put buffer in JSON buffer
             js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                               "\"auth-req-type\":%s, ", auth_req_type);
+                               "\"auth-req-type\":%s,", auth_req_type);
             break;
         }
 
@@ -485,7 +485,7 @@ int diameter_parser(const u_char *packet, int size_payload, char *json_buffer, i
 
             // put buffer in JSON buffer
             js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                               "\"sess-server-failover\":%s, ", sess_fail_type);
+                               "\"sess-server-failover\":%s,", sess_fail_type);
             break;
         }
 
@@ -507,7 +507,7 @@ int diameter_parser(const u_char *packet, int size_payload, char *json_buffer, i
 
             // put buffer in JSON buffer
             js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                               "\"origin-host\":%s, ", org_host);
+                               "\"origin-host\":%s,", org_host);
             break;
         }
 
@@ -529,7 +529,7 @@ int diameter_parser(const u_char *packet, int size_payload, char *json_buffer, i
 
             // put buffer in JSON buffer
             js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                               "\"destination-host\":%s, ", dst_host);
+                               "\"destination-host\":%s,", dst_host);
             break;
         }
 
@@ -551,7 +551,7 @@ int diameter_parser(const u_char *packet, int size_payload, char *json_buffer, i
 
             // put buffer in JSON buffer
             js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                               "\"origin-realm\":%s, ", org_realm);
+                               "\"origin-realm\":%s,", org_realm);
             break;
         }
 
@@ -573,7 +573,7 @@ int diameter_parser(const u_char *packet, int size_payload, char *json_buffer, i
 
             // put buffer in JSON buffer
             js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                               "\"destination-realm\":%s, ", dst_realm);
+                               "\"destination-realm\":%s,", dst_realm);
             break;
         }
 
@@ -595,7 +595,7 @@ int diameter_parser(const u_char *packet, int size_payload, char *json_buffer, i
 
             // put buffer in JSON buffer
             js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                               "\"auth-app-ID\":%u, ", auth_app_id);
+                               "\"auth-app-ID\":%u,", auth_app_id);
             break;
         }
 
@@ -617,10 +617,10 @@ int diameter_parser(const u_char *packet, int size_payload, char *json_buffer, i
             // put buffer in JSON buffer
             if(vend_id == _3GPP_ID)
                 js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                                   "\"vendor-ID\":%s, ", "3GPP");
+                                   "\"vendor-ID\":%s,", "3GPP");
             else
                 js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                                   "\"vendor-ID\":%u, ", vend_id);
+                                   "\"vendor-ID\":%u,", vend_id);
             break;
         }
 
@@ -648,7 +648,7 @@ int diameter_parser(const u_char *packet, int size_payload, char *json_buffer, i
 
             // put buffer in JSON buffer
             js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                               "\"res-code\":%s, ", rc_buff);
+                               "\"res-code\":%s,", rc_buff);
             break;
         }
 
@@ -669,7 +669,7 @@ int diameter_parser(const u_char *packet, int size_payload, char *json_buffer, i
 
             // put buffer in JSON buffer
             js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                               "\"origin-state-id\":%u, ", orgst_id);
+                               "\"origin-state-id\":%u,", orgst_id);
             break;
         }
 
@@ -695,7 +695,7 @@ int diameter_parser(const u_char *packet, int size_payload, char *json_buffer, i
 
             // put buffer in JSON buffer
             js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                               "\"event-timestamp\":""%s"", ", buff_tm);
+                               "\"event-timestamp\":""%s"",", buff_tm);
             break;
         }
 
@@ -712,7 +712,7 @@ int diameter_parser(const u_char *packet, int size_payload, char *json_buffer, i
                 padd++;	l++;
             }
 
-            js_ret += snprintf((json_buffer + js_ret), buffer_len, "{ \"experimental-result\":{ ");
+            /* js_ret += snprintf((json_buffer + js_ret), buffer_len, "{ \"experimental-result\":{ "); */
 
             // Header AVP
             struct avp_header_t *avp = (struct avp_header_t *) start;
@@ -741,7 +741,7 @@ int diameter_parser(const u_char *packet, int size_payload, char *json_buffer, i
 
             // put buffer in JSON buffer
             js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                               "\"Exp-Result-Code\":%u, ", exp_res_code);
+                               "\"Exp-Result-Code\":%u,", exp_res_code);
             break;
         }
 
@@ -764,7 +764,7 @@ int diameter_parser(const u_char *packet, int size_payload, char *json_buffer, i
 
             // put buffer in JSON buffer
             js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                               "\"public-identity\":%s, ", pub_id);
+                               "\"public-identity\":%s,", pub_id);
             break;
         }
 
@@ -786,7 +786,7 @@ int diameter_parser(const u_char *packet, int size_payload, char *json_buffer, i
 
             // put buffer in JSON buffer
             js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                               "\"visit-network-id\":%s, ", visit_net_id);
+                               "\"visit-network-id\":%s,", visit_net_id);
             break;
         }
 
@@ -808,7 +808,7 @@ int diameter_parser(const u_char *packet, int size_payload, char *json_buffer, i
 
             // put buffer in JSON buffer
             js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                               "\"server-name\":%s, ", srv_name);
+                               "\"server-name\":%s,", srv_name);
             break;
         }
 
@@ -830,7 +830,7 @@ int diameter_parser(const u_char *packet, int size_payload, char *json_buffer, i
 
             // put buffer in JSON buffer
             js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                               "\"user-data\":%s, ", user_data);
+                               "\"user-data\":%s,", user_data);
             break;
         }
 
@@ -841,7 +841,7 @@ int diameter_parser(const u_char *packet, int size_payload, char *json_buffer, i
         } // switch
     }
 
-    js_ret += snprintf((json_buffer + js_ret - 2), (buffer_len - js_ret + 1), " }}}");
+    js_ret += snprintf((json_buffer + js_ret - 2), (buffer_len - js_ret + 1), " }");
 
     return 0; // OK
 }
