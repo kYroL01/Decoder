@@ -40,11 +40,6 @@
 // SIP DIAMETER
 
 // CREDIT CONTROL
-/* #define SUBSCR_ID_JSON "\"subscription-ID\":{\"Subscription-ID-data\":%s, \"Subscription-ID-type\":%u}, " */
-/* #define SERV_PARAM_JSON "\"service-parameter-info\":{\"Service-parameter-type\":%u, \"Service-parameter-value\":%s}, " */
-/* #define REQ_SERV_JSON "\"requested-service\":{\"Value-digits\":%lu, \"Currency-code\":%u}, " */
-/* #define GRANT_SERV_JSON "\"granted-service\":{\"Value-digits\":%lu, \"Currency-code\":%u}, " */
-/* #define USED_SERV_JSON "\"used-service\":{\"Value-digits\":%lu, \"Currency-code\":%u}, " */
 
 #define JSON_BUFFER_LEN 5000
 
