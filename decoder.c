@@ -42,6 +42,7 @@
 #define DEVICE_ERROR(device, file)				\
   fprintf(stderr, "error on #%s or #%s\n", device, file);	\
 
+char err_buff[PCAP_ERRBUF_SIZE];
 // declaration of var signal_flag
 volatile sig_atomic_t signal_flag;
 
@@ -59,16 +60,27 @@ static void print_usage()
 }
 
 // Print the list of availlable devices
-static void print_all_devices(pcap_if_t *all_devs, pcap_if_t *d)
+static void print_all_devices()
 {
-  int i = 0;
-  printf("\nList of available devices on your system:\n\n");
-  for(d = all_devs; d; d = d->next) {
-    printf("device %d = %s", ++i, d->name);
-    if(d->description)
-      printf("\t\t (%s)\n", d->description);
-    else
-      printf("\t\t No description available for this device\n");
+    pcap_if_t *all_devs;
+    pcap_if_t *d;
+    int i = 0;
+    
+    printf("\nList of available devices on your system:\n\n");
+    
+    if(pcap_findalldevs(&all_devs, err_buff) == -1) {
+        fprintf(stderr,"Error in pcap_findalldevs: %s\n", err_buff);
+        print_usage();
+        return EXIT_FAILURE;
+    }
+    for(d = all_devs; d; d = d->next) {
+        if((strncmp(d->name, "any", 3) != 0) && (strncmp(d->name, "lo", 2) != 0)) {
+            printf("device %d = %s", ++i, d->name);
+            if(d->description)
+                printf("\t\t (%s)\n", d->description);
+            else
+                printf("\t\t No description available for this device\n");
+        }
     }
 }
 
@@ -88,7 +100,6 @@ int main( int argc, char *argv[] )
 
   //long thread_id;
 
-  char err_buff[PCAP_ERRBUF_SIZE];
   char *device = NULL, *file = NULL;
   u_int8_t save = 0;
 
@@ -125,12 +136,7 @@ int main( int argc, char *argv[] )
       break;
 
     case 'l':
-      if(pcap_findalldevs(&all_devs, err_buff) == -1) {
-        fprintf(stderr,"Error in pcap_findalldevs: %s\n", err_buff);
-        print_usage();
-        return EXIT_FAILURE;
-      }
-      print_all_devices(all_devs, d);
+      print_all_devices();
       return EXIT_SUCCESS;
 
     case 's':
