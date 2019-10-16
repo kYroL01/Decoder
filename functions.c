@@ -112,7 +112,7 @@ void delete_flow_by_key(struct Flow_key *key)
 
     // search the flow by a key
     HASH_FIND(hh, HT_Flows, key, sizeof(struct Flow_key), flow_in);
-    if(!flow_in) {
+    if(flow_in) {
         HASH_DEL(HT_Flows, flow_in);
         free(flow_in);
     }
