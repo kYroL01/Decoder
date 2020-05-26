@@ -234,7 +234,7 @@ struct flow_stats
     u_int16_t num_diameter_pkts; // count diameter pkts
     u_int16_t num_ngcp_pkts;     // count ngcp pkts
     u_int16_t num_rtsp_pkts;     // count rtsp pkts
-
+    u_int16_t num_msrp_pkts;     // count msrp pkts
 };
 
 /* struct passed to the callback proto function */

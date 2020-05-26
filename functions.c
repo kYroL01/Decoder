@@ -190,7 +190,7 @@ static unsigned int process_packet(const u_char * payload,
     if(proto_id_l3 == IPPROTO_UDP) {
 
         /**
-           check for NGCP protocol
+           Check NGCP dissector
         */
         struct msg_fake_sip *msg_sf;
         msg_sf = ngcp_parser(payload, size_payload);
@@ -223,9 +223,8 @@ static unsigned int process_packet(const u_char * payload,
         }
 
         /**
-           check for RTCP protocol
-         */
-        // check version
+           Check RTCP dissector
+        */
         ret = check_rtcp_version(payload, size_payload);
 
         if(ret == -1) {
@@ -295,7 +294,6 @@ static unsigned int process_packet(const u_char * payload,
         /**
            Check TLS dissector
         */
-
         memset(json_buffer, 0, JSON_BUFFER_LEN);
 
         struct Flow_key  *flow_key  = NULL;
@@ -392,14 +390,13 @@ static unsigned int process_packet(const u_char * payload,
         /**
            Check DIAMETER dissector
         */
-
         memset(json_buffer, 0, JSON_BUFFER_LEN);
 
         // Call DIAMETER dissector function
         ret = diameter_parser(payload,
-                                 size_payload,
-                                 json_buffer,
-                                 JSON_BUFFER_LEN);
+                              size_payload,
+                              json_buffer,
+                              JSON_BUFFER_LEN);
         if(ret == -1) {
             fprintf(stderr, "Not a diameter packet\n");
         }
@@ -408,6 +405,26 @@ static unsigned int process_packet(const u_char * payload,
             /* Print JSON buffer */
             printf("%s\n", json_buffer);
         }
+
+
+        /**
+           Check MSRP dissector
+        */
+        memset(json_buffer, 0, JSON_BUFFER_LEN);
+
+        // Call MSRP dissector function
+        ret = msrp_parser(payload,
+                          size_payload,
+                          json_buffer,
+                          JSON_BUFFER_LEN);
+        if(ret == -1) {
+            fprintf(stderr, "Not a diameter packet\n");
+        }
+        else {
+            ret = 0;
+            /* Print JSON buffer */
+            printf("%s\n", json_buffer);
+        }        
     }
  end:
     return ret;
@@ -729,6 +746,9 @@ void callback_proto(u_char *args, const struct pcap_pkthdr *pkt_header, const u_
 
     // compute tcp payload (segment) size
     size_payload = pkt_header->len - ip_offset - l4_offset - link_offset;
+    // TODO check if we have VSS-monitoring ethernet trailer in latest 2 bytes
+    size_payload = check_vss_trailer(payload, size_payload);
+    
     if(size_payload > 0)
         printf("\t Payload (%d bytes):\n", size_payload);
 
@@ -750,28 +770,32 @@ void callback_proto(u_char *args, const struct pcap_pkthdr *pkt_header, const u_
                            s
                            /* HT_Flows */);
     if(check == 4) { //TODO FIX
-        printf("TLS/SSL packet founded and parsed\n");
+        printf("TLS/SSL packet found and parsed\n");
         fcp->stats.num_tls_pkts++;
         print_HashTable(ip_version);
     }
     else if(check == 3) {
-        printf("DIAMETER Protocol founded and parsed\n");
+        printf("DIAMETER Protocol found and parsed\n");
         fcp->stats.num_diameter_pkts++;
     }
     else if(check == 2) {
-        printf("NGCP Protocol founded and parsed\n");
+        printf("NGCP Protocol found and parsed\n");
         fcp->stats.num_ngcp_pkts++;
     }
     else if(check == 1) {
-        printf("RTCP Protocol founded and parsed\n");
+        printf("RTCP Protocol found and parsed\n");
         fcp->stats.num_rtcp_pkts++;
     }
     else if(check == 5) {
-        printf("RTSP Protocol founded and parsed\n");
+        printf("RTSP Protocol found and parsed\n");
         fcp->stats.num_rtsp_pkts++;
     }
+    else if(check == 0) {
+        printf("MSRP Protocol found and parsed\n");
+        fcp->stats.num_msrp_pkts++;
+    }
     else {
-        printf("\n\t Other protocol L4\n\n");
+        printf("\n\t Other protocols\n\n");
     }
 }
 
@@ -802,6 +826,7 @@ void print_stats(struct flow_callback_proto * fcp)
     printf(" # DIAMETER pkts               = %d\n",   fcp->stats.num_diameter_pkts);
     printf(" # NGCP pkts                   = %d\n",   fcp->stats.num_ngcp_pkts);
     printf(" # RTSP pkts                   = %d\n",   fcp->stats.num_rtsp_pkts);
+    printf(" # MSRP pkts                   = %d\n",   fcp->stats.num_msrp_pkts);
     printf("\033[0m");
 
     printf(" ---------- ------------------ ----------\n\n");

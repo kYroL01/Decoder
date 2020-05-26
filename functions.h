@@ -29,6 +29,7 @@
 #include "rtcp.h"
 #include "ngcp.h"
 #include "rtsp.h"
+#include "msrp.h"
 
 /* global variable to represent SIGINT signal */
 extern volatile sig_atomic_t signal_flag;
@@ -88,16 +89,13 @@ int rtcp_parser(const u_char *packet,
                    int buffer_len);
 
 
-/**
-   Functions for RTCPXR dissection
-**/
-// Check version
-int check_rtcpxr_version(const u_char *packet, int size_payload);
-// Dissect packet
-int rtcpxr_dissector(const u_char *packet,
-		     int size_payload,
-		     char *json_buffer,
-		     int buffer_len);
+/* // Check version */
+/* int check_rtcpxr_version(const u_char *packet, int size_payload); */
+/* // Dissect packet */
+/* int rtcpxr_dissector(const u_char *packet, */
+/* 		     int size_payload, */
+/* 		     char *json_buffer, */
+/* 		     int buffer_len); */
 
 
 /**
@@ -119,7 +117,18 @@ struct msg_fake_sip * ngcp_parser(const u_char * payload,
 /**
    Functions for RTSP dissection
 **/
-int rtsp_parser(const u_char *packet, int size_payload, char *json_buffer, int buffer_len);
+int rtsp_parser(const u_char *packet,
+                int size_payload,
+                char *json_buffer,
+                int buffer_len);
 
+
+/**
+   Functions for MSRP dissection
+**/
+int msrp_parser(const u_char *packet,
+                int size_payload,
+                char *json_buffer,
+                int buffer_len);
 
 #endif
