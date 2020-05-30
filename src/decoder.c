@@ -1,7 +1,7 @@
 /**
    Main module of decoder
 
-   decoder - test program for network protocols
+   decoder - network protocols and more
    Copyright (C) 2016-2018 Michele Campus <fci1908@gmail.com>
 
    This file is part of decoder.
@@ -25,15 +25,8 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <signal.h>
-//#include <pthread.h>
 #include "structures.h"
 #include "functions.h"
-
-// setup for threads management
-/* pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER; */
-/* /\* pthread_t call_thread[MAX_NUM_THREADS]; *\/ */
-/* /\* pcap_t *sniffer_proto[MAX_SOCKETS]; *\/ */
-/* static u_int8_t num_threads = 1; */
 
 // default snap length (maximum bytes per packet to capture)
 #define SNAP_LEN 1518
@@ -52,11 +45,11 @@ static void print_usage()
   fprintf( stderr , "      decoder -i <device> | -p <file> |  [-w <file>]\n");
   fprintf( stderr , "    -i <device>  : use <device> for live capture\n" );
   fprintf( stderr , "    -p <file>    : open <file> and read packets\n" );
-  /* fprintf( stderr , "    -n <threads> : set number of thread (>1)\n" ); */
   fprintf( stderr , "    -l           : list availlable devices\n" );
   fprintf( stderr , "    -h           : print help on how to use\n" );
   fprintf( stderr , "\n" );
 }
+
 
 // Print the list of availlable devices
 static void print_all_devices(pcap_if_t *all_devs, pcap_if_t *d)
@@ -72,11 +65,13 @@ static void print_all_devices(pcap_if_t *all_devs, pcap_if_t *d)
     }
 }
 
+
 // signal handler for managing SIGINT - set volatile variable to 1
 void sigint_handler()
 {
   signal_flag = 1;
 }
+
 
 /* MAIN */
 int main( int argc, char *argv[] )
@@ -86,23 +81,19 @@ int main( int argc, char *argv[] )
   pcap_if_t *all_devs, *d = NULL;
   pcap_t *pcap_handle;
 
-  //long thread_id;
-
   char err_buff[PCAP_ERRBUF_SIZE];
   char *device = NULL, *file = NULL;
   u_int8_t save = 0;
 
-  /* *SIGNAL* */
+  /* SIGNAL */
   struct sigaction sigint_action;            /* struct for signal registration */
   sigset_t new_set, old_set;                 /* signal mask */
-
-
   // initialize error_buffer to 0
   memset(err_buff, 0, PCAP_ERRBUF_SIZE);
   // initialize volatile sigatomic to 0
   signal_flag = 0;
 
-  //parse options
+  // parse options
   int opt;
   while( opt = getopt(argc, argv, ":hi:n:p:ls") , opt != -1 )
   {
@@ -111,10 +102,6 @@ int main( int argc, char *argv[] )
     case 'i':
       device = optarg;
       break;
-
-    /* case 'n': */
-    /*   num_threads = atoi(optarg); */
-    /*   break; */
 
     case 'h':
       print_usage();
@@ -150,10 +137,15 @@ int main( int argc, char *argv[] )
     }
   }
 
-  if(device) {
+  /**
+     LIVE CAPTURE 
+  **/
+  if(device) {      
 
-    /* setting signal mask */
-    if(sigfillset(&new_set) == -1) {
+      /* #### SIGNAL MASK #### */
+      
+      /* setting signal mask */
+      if(sigfillset(&new_set) == -1) {
       perror("ERROR: Cannot set signal mask, ");
       return EXIT_FAILURE;
     }
@@ -175,18 +167,23 @@ int main( int argc, char *argv[] )
       perror("ERROR: Cannot restore process's signal mask, ");
       return EXIT_FAILURE;
     }
+    /* #### SIGNAL MASK (end) #### */
 
     printf("Sniffing on device %s\n", device);
-    // open device live
+    /* open device */
     pcap_handle = pcap_open_live(device, SNAP_LEN, 0, 0, err_buff);
     if(!pcap_handle) {
       pcap_fatal("pcap_open_live", err_buff);
       return EXIT_FAILURE;
     }
   }
-  else if(file) {
+  
+  /**
+     PCAP CAPTURE
+  **/
+  else if(file) {    
     printf("Opening pcap file %s\n", file);
-    // open file pcap
+    /* open pcap */
     pcap_handle = pcap_open_offline(file, err_buff);
     if(!pcap_handle) {
       pcap_fatal("pcap_open_offline", err_buff);
@@ -201,40 +198,20 @@ int main( int argc, char *argv[] )
     return EXIT_FAILURE;
   }
 
-  /* init struct for flow */
+  
+  /* init structures for FLOW */
   fcp = flow_callback_proto_init(pcap_handle, save);
 
-  // initialization of flow per thread
-  /* for(thread_id = 0; thread_id < num_threads; thread_id++) { */
-  /*   memset(&call_thread[thread_id], 0, sizeof(call_thread[thread_id])); */
-  /*   call_thread[thread_id].flow_c = flow_callback_proto_init(thread_id, */
-  /* 							     pcap_handle);     */
-  /* } */
-
-  // setting threads
-  /* if(num_threads > MAX_NUM_THREADS) num_threads = MAX_NUM_THREADS; */
-  /* for(thread_id = 0; thread_id < num_threads; thread_id++) */
-  /*   pthread_create(&call_thread[thread_id].pthread, NULL, run_loop_proto_collect, (void*) thread_id); */
-
-  /* /\* waiting for completion of thread work *\/ */
-  /* for(thread_id = 0; thread_id < num_threads; thread_id++) */
-  /*   pthread_join(call_thread[thread_id].pthread, NULL); */
-
-  // loop for extract packets
+  /* loop for packets */
   pcap_loop(fcp->pcap_handle, -1, callback_proto, (u_char*) fcp);
 
   printf("\n\n<<< DETECTION FINISHED >>>\n\n");
 
-  // print statistics of flows
+  /* print statistics of flows */
   print_stats(fcp);
 
-  // terminate the handle pcap function
+  /* terminate the handle pcap function */
   pcap_close(fcp->pcap_handle);
 
   return 0;
 }
-
-/**
-   TODO
-   - extraction name server from client hello and server hello
-**/

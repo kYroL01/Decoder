@@ -1,8 +1,7 @@
 /**
    Prototypes of utility function for decoder
 
-   decoder - decode TLS/SSL traffic - save handshake and extract certificate
-   Copyright (C) 2016-2017 Michele Campus <fci1908@gmail.com>
+   Copyright (C) 2016-2020 Michele Campus <michelecampus5@gmail.com>
 
    This file is part of decoder.
 
@@ -34,22 +33,27 @@
 /* global variable to represent SIGINT signal */
 extern volatile sig_atomic_t signal_flag;
 
-/** Get the pcap error occurred */
+/**
+   Get the pcap error occurred
+**/
 inline static void pcap_fatal(const char *err_name, ...)
 {
   fprintf(stderr, "Fatal Error in %s \n", err_name);
 }
 
-/** Protocol callback function call in pcap_loop */
+/**
+   Protocol callback function call in pcap_loop 
+**/
 void callback_proto(u_char *, const struct pcap_pkthdr *, const u_char *);
 
-/** Init data flow struct */
-struct flow_callback_proto * flow_callback_proto_init(/* int thread_id ,*/pcap_t *, u_int8_t);
+/**
+   Init data flow struct 
+**/
+struct flow_callback_proto * flow_callback_proto_init(pcap_t *, u_int8_t);
 
-/** Call pcap_loop() to process packets from a live capture or savefile */
-//void * run_loop_proto_collect(void *);
-
-/** Print statistics */
+/**
+   Print statistics
+**/
 void print_stats(struct flow_callback_proto *);
 
 /** Functions for the HASH TABLE (uthash) **/
@@ -61,11 +65,9 @@ void delete_flow_by_key(struct Flow_key *key);
 void delete_all_Flows();
 
 
-/** ##### ##### ##### PROTOCOL FUNCTIONS ##### ##### ##### */
+/** ##### ##### ##### DISSECTOR PROTOTYPES ##### ##### ##### */
 
-/**
-   Function for TLS dissection
-**/
+/** TLS dissection **/
 int tls_parser(const u_char ** payload,
                const u_int16_t size_payload,
                const u_int8_t ip_version,
@@ -75,60 +77,28 @@ int tls_parser(const u_char ** payload,
                const u_int8_t proto_id_l3,
                u_int8_t s
                /* struct Hash_Table ** HT_Flows */);
-
-
-/**
-   Functions for RTCP dissection
-**/
-// Check version
-int check_rtcp_version(const u_char *packet, int size_payload);
-// Dissect packet
+/** RTCP dissector **/
 int rtcp_parser(const u_char *packet,
-                   int size_payload,
-                   char *json_buffer,
-                   int buffer_len);
-
-
-/* // Check version */
-/* int check_rtcpxr_version(const u_char *packet, int size_payload); */
-/* // Dissect packet */
-/* int rtcpxr_dissector(const u_char *packet, */
-/* 		     int size_payload, */
-/* 		     char *json_buffer, */
-/* 		     int buffer_len); */
-
-
-/**
-   Functions for DIAMETER dissection
-**/
-// Parse packet and fill JSON buffer
+                int size_payload,
+                char *json_buffer,
+                int buffer_len);
+/** DIAMETER dissector **/
 int diameter_parser(const u_char *packet,
                        int size_payload,
                        char *json_buffer,
                        int buffer_len);
-
-
-/**
-   Functions for NGCP dissection
-**/
+/** NGCP dissector **/
 struct msg_fake_sip * ngcp_parser(const u_char * payload,
                                   const u_int16_t size_payload);
 
-/**
-   Functions for RTSP dissection
-**/
+/** Functions for RTSP dissection **/
 int rtsp_parser(const u_char *packet,
                 int size_payload,
                 char *json_buffer,
                 int buffer_len);
-
-
-/**
-   Functions for MSRP dissection
-**/
+/** Functions for MSRP dissection **/
 int msrp_parser(const u_char *packet,
                 int size_payload,
                 char *json_buffer,
                 int buffer_len);
-
 #endif

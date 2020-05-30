@@ -1,8 +1,7 @@
 /**
    Implementation of functions.h
 
-   decoder - test program for network protocols
-   Copyright (C) 2016-2018 Michele Campus <fci1908@gmail.com>
+   Copyright (C) 2016-2020 Michele Campus <michelecampus5@gmail.com>
 
    This file is part of decoder.
 
@@ -36,7 +35,7 @@
 /* ### Declaration of HASH TABLE ### */
 extern struct Hash_Table *HT_Flows;
 
-// get the pcap error occurred
+/* get the pcap error occurred */
 extern inline void pcap_fatal(const char *, ...);
 
 /**
@@ -50,11 +49,13 @@ static inline uint8_t getBits(uint16_t x, int p, int n)
     return (x >> (p+1-n)) & ~(~0 << n);
 }
 
-// Init data flow struct
-struct flow_callback_proto * flow_callback_proto_init(/* int thread_id, */pcap_t * p_handle, u_int8_t save)
+/**
+   Init data flow struct
+**/
+struct flow_callback_proto *flow_callback_proto_init(pcap_t * p_handle, u_int8_t save)
 {
-    struct flow_callback_proto * flow = malloc(sizeof(struct flow_callback_proto));
-    if(!flow) perror("fcp malloc failed");
+    struct flow_callback_proto *flow = malloc(sizeof(struct flow_callback_proto));
+    if(!flow) perror("flow malloc failed");
 
     flow->pcap_handle = p_handle;
     flow->save = save;
@@ -62,7 +63,9 @@ struct flow_callback_proto * flow_callback_proto_init(/* int thread_id, */pcap_t
     return flow;
 }
 
-// Print IPv4 address
+/**
+   Print IPv4 address 
+**/
 void print_ipv4(u_int32_t addr)
 {
     unsigned char bytes[4];
@@ -73,7 +76,9 @@ void print_ipv4(u_int32_t addr)
     printf("%d.%d.%d.%d\n", bytes[0], bytes[1], bytes[2], bytes[3]);
 }
 
-// Print IPv6 address
+/**
+   Print IPv6 address 
+**/
 void print_ipv6(const struct ipv6_addr * addr) {
 
     printf("%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x\n",
@@ -157,19 +162,10 @@ void print_HashTable(u_int8_t ip_version)
     }
 }
 
-// Call pcap_loop()
-/* void * run_loop_proto_collect(void * arg) { */
 
-/*   long thread_id = (long) arg; */
-
-/*   if(call_thread[thread_id].flow_c->pcap_handle) */
-/*     pcap_loop(call_thread[thread_id].flow_c->pcap_handle, -1, callback_proto, (u_char*) &thread_id); */
-
-/*   return NULL; */
-
-/* } */
-
-// Function to process a packet
+/**
+   Function to process a packet
+**/
 static unsigned int process_packet(const u_char * payload,
                                    const u_int16_t size_payload,
                                    const u_int8_t ip_version,
@@ -434,11 +430,8 @@ static unsigned int process_packet(const u_char * payload,
 // Protocol callback function
 void callback_proto(u_char *args, const struct pcap_pkthdr *pkt_header, const u_char *packet) {
 
-    // cast args to int thread
-    /* int thread_id = *((int*)args); */
 
     // define flow based on thread_id on call_thread array
-    /* struct flow_callback_proto * fcp = call_thread[thread_id].flow_c; */
     struct flow_callback_proto * fcp = (struct flow_callback_proto*) args;
 
     // define ethernet header
@@ -523,6 +516,7 @@ void callback_proto(u_char *args, const struct pcap_pkthdr *pkt_header, const u_
         // Check for FLAG fields
         flags = getBits(radiotap_header->present, 1, 1);
         printf("Flags = %d\n", flags);
+
         /* // Check Bad FCS presence */
         /* if((radiotap_header->flags & BAD_FCS) == BAD_FCS) { */
         /* 	fcp->stats.discarded_bytes += pkt_header->len; */
@@ -540,6 +534,7 @@ void callback_proto(u_char *args, const struct pcap_pkthdr *pkt_header, const u_
         /* } */
         // no data frames
         /* else */
+        
     	break;
         // Wifi data present - check LLC
         llc_snap_header = (struct llc_snap_hdr*)(packet + wifi_len + radiotap_len);

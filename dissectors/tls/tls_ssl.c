@@ -1,8 +1,7 @@
 /**
    This TLS dissector parse the pkt and extract the handshake (if present)
 
-   decoder - decode TLS/SSL traffic - save handshake and extract certificate
-   Copyright (C) 2016-2017 Michele Campus <fci1908@gmail.com>
+   Copyright (C) 2016-2020 Michele Campus <michelecampus5@gmail.com>
 
    This file is part of decoder.
 

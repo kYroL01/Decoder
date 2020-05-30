@@ -4,8 +4,7 @@
    - Network layer
    - Transport layer
 
-   decoder - decode TLS/SSL traffic - save handshake and extract certificate
-   Copyright (C) 2016-2019 Michele Campus <fci1908@gmail.com>
+   Copyright (C) 2016-2020 Michele Campus <michelecampus5@gmail.com>
 
    This file is part of decoder.
 
@@ -246,31 +245,6 @@ struct flow_callback_proto
     u_int8_t save;
 };
 
-/* Public Key from Server Certificate */
-/* TODO */
-
-// Handshake struct for the Flow (to put in Hashtable)
-/*
-  - pre-master secret (encrypted)
-  - public key cert (from server in case of pms presence) TLS1
-  - public key cli  (from client key exchange) TLS1.2
-  - random val (C-S)
-  - session ID (C-S)
-  - certificate
-*/
-struct Handshake
-{
-    u_int8_t *enc_pre_master_secret; // Pre-Master Secret (encrypted)
-    u_int8_t *pubkey;                // Public Key CLI Key Exch (TLS1.2)
-    u_int8_t *public_key_cert;       // Public Key Cert (TLS1)
-    u_int8_t cli_rand[32];           // Client random num
-    u_int8_t srv_rand[32];           // Server random num
-    u_int8_t *sessID_c;              // Client session ID
-    u_int8_t *sessID_s;              // Server session ID
-    u_int8_t *certificate_S;         // Server Certificate
-    u_int8_t *certificate_C;         // [Opt] Client Certificate
-    u_int8_t chiph_serv[2];          // Chipher Suite Server
-};
 
 /* struct containing the fields used as the key in the hashmap for a flow */
 struct Flow_key

@@ -117,7 +117,30 @@ struct client_key_exch {
   u_int8_t * p_data;
 };
 
-/**** ALERT -TODO- ****/
+
+// Handshake struct for the Flow (to put in Hashtable)
+/*
+  - pre-master secret (encrypted)
+  - public key cert (from server in case of pms presence) TLS1
+  - public key cli  (from client key exchange) TLS1.2
+  - random val (C-S)
+  - session ID (C-S)
+  - certificate
+*/
+struct Handshake
+{
+    u_int8_t *enc_pre_master_secret; // Pre-Master Secret (encrypted)
+    u_int8_t *pubkey;                // Public Key CLI Key Exch (TLS1.2)
+    u_int8_t *public_key_cert;       // Public Key Cert (TLS1)
+    u_int8_t cli_rand[32];           // Client random num
+    u_int8_t srv_rand[32];           // Server random num
+    u_int8_t *sessID_c;              // Client session ID
+    u_int8_t *sessID_s;              // Server session ID
+    u_int8_t *certificate_S;         // Server Certificate
+    u_int8_t *certificate_C;         // [Opt] Client Certificate
+    u_int8_t chiph_serv[2];          // Chipher Suite Server
+};
+
 
 /* PRIVATE KEY */
 //const char * private_key = "cakey.pem";
