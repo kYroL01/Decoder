@@ -40,8 +40,8 @@ int msrp_parser(const u_char *packet, int size_payload, char *json_buffer, int b
     int offset_line;
     // define structs for msrp pkts
     struct msrp_send_t msrp_send;
-    struct msrp_report_t msrp_rep;
-    struct msrp_answer_t msrp_answ;
+    struct msrp_response_t msrp_resp;
+    struct msrp_report_t msrp_report;
     // aux
     char buffer[LEN] = {0};    
 

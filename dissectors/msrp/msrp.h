@@ -30,12 +30,15 @@
 #include <time.h>
 
 /* Definition of MSRP common info JSON */
-#define MSRP_HEADER_JSON "\"msrp_info\": { [\"class\":\"%s\",\"type\":\"%s\",\"command\":\"%s\",\"app-ID\":%d] }"
+/* #define MSRP_HEADER_JSON "\"msrp_info\": { [\"class\":\"%s\",\"type\":\"%s\",\"command\":\"%s\",\"app-ID\":%d] }" */
 
 #define JSON_BUFFER_LEN 5000
 
 #define LEN 300
 
+/**
+   RFC: https://tools.ietf.org/html/rfc4975
+ **/
 
 // MSRP SEND pkt
 struct msrp_send_t
@@ -69,8 +72,8 @@ struct msrp_report_t
     char end_line[LEN];
 };
 
-// MSRP answer pkt
-struct msrp_answer_t
+// MSRP Response pkt
+struct msrp_response_t
 {
     char transaction_ID[LEN];
     char method[LEN];
