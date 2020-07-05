@@ -880,7 +880,7 @@ int tls_parser(const u_char **payload,
       } while(count < size_payload);
     }
 
-    return 0; // it it's TLS
+    return 0; // it's TLS
   }
   return -1;
 }
