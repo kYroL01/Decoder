@@ -219,6 +219,12 @@ static unsigned int process_packet(const u_char * payload,
             printf("to-tag: %s\n", msg_sf->to_tag);
             printf("\033[0m");
             printf("\033[1;31m");
+            printf("a-number: %s\n", msg_sf->a_number);
+            printf("\033[0m");
+            printf("\033[1;31m");
+            printf("b-number: %s\n", msg_sf->b_number);
+            printf("\033[0m");
+            printf("\033[1;31m");
             printf("\n-------------------- --- ---- --- -------------------- \n");
             printf("\n-------------------- --- ---- --- -------------------- \n");
             printf("\033[0m");

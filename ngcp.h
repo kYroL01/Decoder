@@ -39,12 +39,14 @@
 #endif
 
 struct msg_fake_sip {
-  char magic[13];
-  char *raw_sdp;
-  char call_id[256];
-  char from_tag[100];
-  char to_tag[100];
-  int comm_flag; // 1 answer 2 offer 3 delete
+    char magic[20];
+    char *raw_sdp;
+    char a_number[20];
+    char b_number[20];
+    char call_id[256];
+    char from_tag[100];
+    char to_tag[100];
+    int comm_flag; // 1 answer 2 offer 3 delete
 };
 
 struct msg_fake_sip *ngcp_parser(const u_char * payload,
