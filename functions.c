@@ -271,6 +271,18 @@ static unsigned int process_packet(const u_char * payload,
 
         // return code for RTCP
         ret = 1;
+        goto end;
+
+        
+        /**
+           check for T38 protocol
+        */
+        // dissect
+        ret = t38_parser(payload, size_payload);
+        if(ret == -1)
+            fprintf(stderr, "error on t38_dissector\n");
+        printf("\nRTCP protocol FOUND ->\n");
+        ret = 3;
     }
 
     /* ################# */

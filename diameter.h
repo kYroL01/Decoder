@@ -1,7 +1,9 @@
 /**
    DIAMETER dissector
 
-   Copyright (C) 2016-2019 Michele Campus <michelecampus5@gmail.com>
+   Copyright (C) 2016-2021 Michele Campus <michelecampus5@gmail.com>
+
+   Based on code from https://github.com/moonlight-stream/moonlight-common-c/blob/master/src/RtspParser.c
 
    This file is part of decoder.
 
@@ -17,8 +19,8 @@
    You should have received a copy of the GNU General Public License along with
    decoder. If not, see <http://www.gnu.org/licenses/>.
 **/
-#ifndef DIAMETER_H
-#define DIAMETER_H
+#ifndef PARSER_DIAMETER_H
+#define PARSER_DIAMETER_H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -29,18 +31,9 @@
 #include <endian.h>
 #include <time.h>
 
+#define DIAMETER_PROTO_TYPE 0x38
 /* Definition of Diameter common info JSON */
-#define DIAMETER_HEADER_JSON "\"diameter_info\": {\"class\":\"%s\",\"type\":\"%s\",\"command\":\"%s\",\"app-ID\":%d,"
-
-/* Definition of AVPs JSON TODO */
-// Basic DIAMETER
-
-// 3GPP DIAMETER
-
-// SIP DIAMETER
-
-// CREDIT CONTROL
-
+#define DIAMETER_HEADER_JSON "{\"type\":\"%s\",\"command\":%d,\"app-ID\":%u,\"hop-by-hop-ID\":\"%s\",\"end-to-end-ID\":\"%s\","
 #define JSON_BUFFER_LEN 5000
 
 // Header Flags possibile values
@@ -50,77 +43,21 @@
 /* #define RETRASM   0X10 */
 
 #define AVP_HDR_LEN  8
-#define UNK         -1
-
-// Flags
-#define REQ          1
+// Flag Type
 #define ANSW         0
-// Classes
-#define DIAM_BASE    0
-#define _3GPP        1
-#define SIP          2
-#define CC           3
-
+#define REQ          1
+#define ANSW_PRX     2
+#define REQ_PRX      3
+#define PRX          4
 // Vendor-ID
 #define _3GPP_ID 10415
 
-/** ############################## COMMANDS ############################## **/
-
-/**
-   A Command Code is used to determine the action that is to be taken for a particular message.
-   Each command Request/Answer pair is assigned a command code.
-**/
-// Diameter protocol base
-typedef enum {
-    CE = 257,
-    RA = 258,
-    AC = 271,
-    AS = 274,
-    ST = 275,
-    DW = 280,
-    DP = 282
-} com_diam_base_t;
-
-// 3GPP
-typedef enum {
-    // Diameter base
-    UA = 300,
-    SA = 301,
-    LI = 302,
-    MA = 303,
-    RT = 304,
-    PP = 305,
-    UD = 306,
-    PU = 307,
-    SN = 308,
-    PN = 309,
-    BI = 310,
-    MP = 311,
-    // 3GPP
-    UL = 316,
-    CL = 317,
-    AI = 318,
-    ID = 319,
-    DS = 320,
-    PE = 321,
-    NO = 323,
-    EC = 324
-} com_diam_3gpp_t;
-
-// Credit control
-typedef enum {
-    CCC = 272
-} com_diam_CC_t;
-
-// SIP
-typedef enum {
-    UAS  = 283,
-    SAS  = 284,
-    LIS  = 285,
-    MAS  = 286,
-    RTS  = 287,
-    PPS  = 288
-} com_diam_sip_t;
+// CORRELATION IDs
+// Cx - Dx - Rx
+#define SESS_ID_CORR      1
+#define PUB_ID_CORR       2
+#define COUNTRY_CODE_CORR 3
+// add define here for others
 
 
 /** ############################## APPLICATION-ID ############################## **/
@@ -130,44 +67,45 @@ typedef enum {
    The application can be an authentication application, an accounting application, or a vendor-specific application.
 **/
 // Diameter protocol base (establishment/teardown/maintenance)
-typedef enum {
-    COMMON_MSG  = 0,
-    NASREQ      = 1,
-    BASE_ACC    = 3,
-    CREDIT_CTRL = 4,         // CREDIT CONTROL
-    SIP_ID      = 6,         // SIP
-    QOS         = 9,
-    NAT_CA      = 12,
-    ERP         = 13
-    /* add more if necessary */
-} diam_app_id_t;
+#define  COMMON_MSG   0
+#define  NASREQ       1
+#define  MOBILE_IPv4  2
+#define  BASE_ACC     3
+#define  CREDIT_CTRL  4
+#define  EAP          5
+#define  SIP_ID       6
+#define  MIP6I        7
+#define  MIP6A        8 
+#define  QOS          9
+#define  CUPD         10
+#define  IKESK        11
+#define  NAT_CA       12
+#define  ERP          13
+// add more here if needed
 
 // 3GPP protocol
-typedef enum {
-    _3GPP_CX    = 16777216,  // IMS I/S-CSCF to HSS interface
-    _3GPP_SH    = 16777217,  // VoIP/IMS SIP Application Server to HSS interface
-    _3GPP_RE    = 16777218,
-    _3GPP_WX    = 16777219,
-    _3GPP_ZN    = 16777220,
-    _3GPP_ZH    = 16777221,
-    _3GPP_GQ    = 16777222,
-    _3GPP_GMB   = 16777223,
-    _3GPP_GX    = 16777224,
-    _3GPP_GXoGY = 16777225,
-    _3GPP_MM10  = 16777226,
-    _3GPP_PR    = 16777230,
-    _3GPP_RX    = 16777236,  // Policy and charging control
-    _3GPP_S6t   = 16777345,   // Interface between SCEF and HSS
-    _3GPP_Sta   = 16777250,
-    _3GPP_S6ad  = 16777251,  // LTE Roaming signaling
-    _3GPP_S13   = 16777252,  // Interface between EIR and MME
-    _3GPP_SLg   = 16777255   // Location services
-    /* add more if necessary */
-} diam_3gpp_app_id_t;
+#define    _3GPP_CX    16777216  // IMS I/S-CSCF to HSS interface
+#define    _3GPP_SH    16777217  // VoIP/IMS SIP Application Server to HSS interface
+#define    _3GPP_RE    16777218
+#define    _3GPP_WX    16777219
+#define    _3GPP_ZN    16777220
+#define    _3GPP_ZH    16777221
+#define    _3GPP_GQ    16777222
+#define    _3GPP_GMB   16777223
+#define    _3GPP_GX    16777224
+#define    _3GPP_GXoGY 16777225
+#define    _3GPP_MM10  16777226
+#define    _3GPP_PR    16777230
+#define    _3GPP_RX    16777236  // Policy and charging control
+#define    _3GPP_S6t   16777345  // Interface between SCEF and HSS
+#define    _3GPP_Sta   16777250
+#define    _3GPP_S6ad  16777251  // LTE Roaming signaling
+#define    _3GPP_S13   16777252  // Interface between EIR and MME
+#define    _3GPP_SLg   16777255  // Location services
+// add more here if needed
 
 
 /** ############################## AVP CODES ############################## **/
-
 
 /**
    AVP Codes.
@@ -184,30 +122,32 @@ typedef enum {
     ORIGIN_HOST    = 264, //
     VENDOR_ID      = 266, //
     RES_CODE       = 268, //
-    SESS_SRV_FAIL  = 271, // not TESTED
-    AUTH_REQ_TYPE  = 274, // not TESTED
+    SESS_SRV_FAIL  = 271, //
+    AUTH_REQ_TYPE  = 274, //
     AUTH_SESS_ST   = 277, //
     ORIGIN_ST_ID   = 278, //
     DEST_REALM     = 283, //
     DEST_HOST      = 293, //
     ORIGIN_REALM   = 296, //
     EXP_RES        = 297, //
-    EXP_RES_CODE   = 298, //
+    EXP_RES_CODE   = 298  //
 } avp_code_t;
 
 // 3GPP
 typedef enum {
-    CHARG_ID_3GPP  =   2,
-    PDP_3GPP_TYPE  =   3,
-    SGSN_3GPP_IPv6 =  15,
-    PKT_FILT_3GPP  =  25,
+    CHARG_ID_3GPP    =   2,
+    PDP_3GPP_TYPE    =   3,
+    SGSN_3GPP_IPv6   =  15,
+    PKT_FILT_3GPP    =  25,
     /* Note: The AVP codes from 1 to 255 are reserved for backwards compatibility
        with 3GPP RADIUS Vendor Specific Attributes */
-    VISIT_NET_ID   = 600,
-    PUB_ID         = 601,
-    SERVER_NAME    = 602,
-    USER_DATA      = 606,
-
+    MEDIA_COMP_DESCR = 517,
+    VISIT_NET_ID     = 600,
+    PUB_ID           = 601,
+    SERVER_NAME      = 602,
+    USER_DATA        = 606,
+    IP_CAN_TYPE      = 1027,
+    RAT_TYPE         = 1032
 } avp_code_3gpp_t;
 
 // Credit Control
@@ -223,6 +163,8 @@ typedef enum {
     CC_CURR_CODE   = 425,
     SERV_PAR_INFO  = 440,
     SUBSCR_ID      = 443,
+    SUBSCR_ID_DATA = 444,
+    SUBSCR_ID_TYPE = 450,
     VALUE_DGT      = 447,
     VALID_TIME     = 448,
     REQ_SERV_UNT   = 437,
@@ -262,9 +204,6 @@ typedef enum {
     SIP_METHOD             = 393
 } avp_code_sip_t;
 
-
-/** ############################################################ **/
-/** ############################################################ **/
 /** ############################################################ **/
 
 
@@ -295,5 +234,12 @@ struct avp_header_t
     u_int8_t  flag;
     u_int8_t  length[3];  /* Values not multiple of four-octets is followed by padding to have 32-bit boundary for the next AVP (if exists) */
 };
+
+/**
+   Functions for the dissection
+   @return JSON length + correlation-id
+**/
+// Parse packet, check if it's Diameter and create JSON buffer with protocol information
+int diameter_parser(const unsigned char *packet, int size_payload, char *json_buffer, int buffer_len);
 
 #endif

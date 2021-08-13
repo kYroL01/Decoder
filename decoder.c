@@ -72,7 +72,7 @@ void print_all_devices()
     {
         fprintf(stderr,"Error in pcap_findalldevs: %s\n", err_buff);
         print_usage();
-        return EXIT_FAILURE;
+        return;
     }
 
     for(d = all_devs; d; d = d->next)   {
@@ -97,18 +97,13 @@ sigint_handler()
 int main( int argc, char *argv[] )
 {
     struct flow_callback_proto * fcp; // for general stats
-
-    pcap_if_t *all_devs, *d = NULL;
-    pcap_t *pcap_handle;
-
+    pcap_t *pcap_handle;    
+    struct sigaction sigint_action;   // struct for signal registration
+    sigset_t new_set, old_set;        // signal mask
     //long thread_id;
-
     char *device = NULL, *file = NULL;
+    int opt;
     u_int8_t save = 0;
-
-    /* *SIGNAL* */
-    struct sigaction sigint_action;            /* struct for signal registration */
-    sigset_t new_set, old_set;                 /* signal mask */
 
 
     // initialize error_buffer to 0
@@ -117,8 +112,7 @@ int main( int argc, char *argv[] )
     signal_flag = 0;
 
     //parse options
-    int opt;
-    while( opt = getopt(argc, argv, ":hi:n:p:ls") , opt != -1 )
+    while(opt = getopt(argc, argv, ":hi:n:p:ls") , opt != -1)
     {
         switch(opt) {
 
