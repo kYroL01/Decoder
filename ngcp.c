@@ -42,7 +42,7 @@ struct msg_fake_sip * ngcp_parser(const u_char * payload,
     // pointer for anumber
     const char *a_number = NULL;
     // pointer for bnumber
-    const char *b_number = NULL;    
+    const char *b_number = NULL;
     // pointer for from-tag
     const char *from_tag = NULL;
     // pointer for to-tag
@@ -82,7 +82,7 @@ struct msg_fake_sip * ngcp_parser(const u_char * payload,
     }
     else
     {
-        fprintf(stderr, "Only OFFER, ANSWER or DELETE command are supported - abort!\n");
+        //fprintf(stderr, "Only OFFER, ANSWER or DELETE command are supported - abort!\n");
         return NULL;
     }
 
@@ -112,12 +112,12 @@ struct msg_fake_sip * ngcp_parser(const u_char * payload,
         // copy the magic cookie
         memcpy(msg_sf->magic, p, cnt);
         msg_sf->magic[cnt] = '\0';
-        
+
         // copy the sdp payload
         memcpy(msg_sf->raw_sdp, sdp, sdp_len);
         msg_sf->raw_sdp[sdp_len] = '\0';
 
-        
+
         /**
         *** A-NUMBER ***
         */
@@ -250,14 +250,14 @@ struct msg_fake_sip * ngcp_parser(const u_char * payload,
             int cnt = 0;
             char *c = strchr(to_tag, ':');
             cnt = c - to_tag;
-            
+
             if(cnt == 1)
                 to_tag_len = to_tag[0]-'0';
             else if(cnt == 2)
                 to_tag_len = (10*(to_tag[0]-'0'))+((to_tag[1]-'0'));
             else if(cnt == 3)
                 to_tag_len = (100*(to_tag[0]-'0'))+(10*(to_tag[1]-'0'))+(to_tag[2]-'0');
-            
+
             // move to_tag pointer
             to_tag = to_tag + cnt + 1;
             // copy the to_tag

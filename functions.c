@@ -2,7 +2,7 @@
    Implementation of functions.h
 
    decoder - test program for network protocols
-   Copyright (C) 2016-2019 Michele Campus <michelecampus5@gmail.com>
+   Copyright (C) 2016-2021 Michele Campus <michelecampus5@gmail.com>
 
    This file is part of decoder.
 
@@ -232,6 +232,43 @@ static unsigned int process_packet(const u_char * payload,
             goto end;
         }
 
+        char* json_buffer = malloc(sizeof(char) * JSON_BUFFER_LEN);
+
+        /**
+           check for RTP protocol
+        */
+        // check version
+        ret = check_rtp_version(payload, size_payload);
+        if(ret == -1) {
+            fprintf(stderr, "error on check rtp_version: bad params\n");
+            return ret;
+        }
+        else if(ret == -2) {
+            fprintf(stderr, "error on check rtp_version: bad version\n");
+            return ret;
+        }
+
+        // dissect
+        ret = rtp_parser(payload,
+                         size_payload,
+                         json_buffer,
+                         JSON_BUFFER_LEN);
+        if(ret == -1)
+            fprintf(stderr, "error on rtp_dissector\n");
+
+        printf("\nRTP protocol FOUND ->\n");
+        /* Print JSON buffer */
+        /* if(ret > 0) */
+        /*     printf("%s\n\n", json_buffer); */
+
+        /* free json_buffer */
+        free(json_buffer);
+
+        // return code for RTP
+        ret = 6;
+        goto end;
+
+
         /**
            check for RTCP protocol
         */
@@ -251,8 +288,6 @@ static unsigned int process_packet(const u_char * payload,
             return ret;
         }
 
-        char* json_buffer = malloc(sizeof(char) * JSON_BUFFER_LEN);
-
         // dissect
         ret = rtcp_parser(payload,
                           size_payload,
@@ -270,19 +305,18 @@ static unsigned int process_packet(const u_char * payload,
         free(json_buffer);
 
         // return code for RTCP
-        ret = 1;
+        ret = 2;
         goto end;
 
-        
-        /**
-           check for T38 protocol
-        */
-        // dissect
-        ret = t38_parser(payload, size_payload);
-        if(ret == -1)
-            fprintf(stderr, "error on t38_dissector\n");
-        printf("\nRTCP protocol FOUND ->\n");
-        ret = 3;
+        /* /\** */
+        /*    check for T38 protocol */
+        /* *\/ */
+        /* // dissect */
+        /* ret = t38_parser(payload, size_payload); */
+        /* if(ret == -1) */
+        /*     fprintf(stderr, "error on t38_dissector\n"); */
+        /* printf("\nRTCP protocol FOUND ->\n"); */
+        /* ret = 3; */
     }
 
     /* ################# */
@@ -832,9 +866,14 @@ void callback_proto(u_char *args, const struct pcap_pkthdr *pkt_header, const u_
         printf("RTCP Protocol founded and parsed\n");
         fcp->stats.num_rtcp_pkts++;
     }
+
     else if(check == 5) {
         printf("RTSP Protocol founded and parsed\n");
         fcp->stats.num_rtsp_pkts++;
+    }
+    else if(check == 6) {
+        printf("RTP Protocol founded and parsed\n");
+        fcp->stats.num_rtp_pkts++;
     }
     else {
         printf("\n\t Other protocol L4\n\n");
@@ -864,6 +903,7 @@ void print_stats(struct flow_callback_proto * fcp)
 
     printf("\033[0;33m");
     printf(" # TLS handshake pkts          = %d\n",   fcp->stats.num_tls_pkts);
+    printf(" # RTP pkts                    = %d\n",   fcp->stats.num_rtp_pkts);
     printf(" # RTCP pkts                   = %d\n",   fcp->stats.num_rtcp_pkts);
     printf(" # DIAMETER pkts               = %d\n",   fcp->stats.num_diameter_pkts);
     printf(" # NGCP pkts                   = %d\n",   fcp->stats.num_ngcp_pkts);

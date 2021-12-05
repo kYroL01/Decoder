@@ -386,7 +386,7 @@ int tls_parser(const u_char **payload,
                 struct handshake_header * hand_hdr = (struct handshake_header*) pp;
                 pp = pp + HANDSK_HEADER_LEN;
                 int offset;
-                u_int8_t is_cert_status = 0;
+                //u_int8_t is_cert_status = 0;
 
                 switch(hand_hdr->msg_type) {
 
@@ -695,7 +695,7 @@ int tls_parser(const u_char **payload,
                     {
                         pp = pp + 1; // Certificate Status Type OCSP (1)
                         u_int16_t cert_status_len = pp[2] + (pp[1] << 8) + (pp[0] << 8);
-                        is_cert_status = 1;
+                        //is_cert_status = 1;
                         offset = TLS_HEADER_LEN + HANDSK_HEADER_LEN + 1 + 3 + cert_status_len;
                         if(offset < size_payload) {
                             pp = pp + 3 + cert_status_len;

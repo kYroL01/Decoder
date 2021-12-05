@@ -248,6 +248,7 @@ struct flow_stats
     u_int16_t tcp_pkts;
     u_int16_t udp_pkts;
     u_int16_t num_tls_pkts;      // count tls pkts
+    u_int16_t num_rtp_pkts;     // count rtp pkts
     u_int16_t num_rtcp_pkts;     // count rtcp pkts
     u_int16_t num_rtcpxr_pkts;   // count rtcpxr pkts
     u_int16_t num_diameter_pkts; // count diameter pkts

@@ -79,8 +79,16 @@ int tls_parser(const u_char ** payload,
                const u_int8_t proto_id_l3,
                u_int8_t s
                /* struct Hash_Table ** HT_Flows */);
-
-
+/**
+   Functions for RTP dissection
+**/
+// Check version
+int check_rtp_version(const u_char *packet, int size_payload);
+// Dissect packet
+int rtp_parser(const u_char *packet,
+               int size_payload,
+               char *json_buffer,
+               int buffer_len);
 /**
    Functions for RTCP dissection
 **/
@@ -91,8 +99,6 @@ int rtcp_parser(const u_char *packet,
                    int size_payload,
                    char *json_buffer,
                    int buffer_len);
-
-
 /**
    Functions for RTCPXR dissection
 **/
@@ -103,8 +109,6 @@ int rtcpxr_dissector(const u_char *packet,
 		     int size_payload,
 		     char *json_buffer,
 		     int buffer_len);
-
-
 /**
    Functions for DIAMETER dissection
 **/
@@ -113,14 +117,11 @@ int diameter_parser(const u_char *packet,
                        int size_payload,
                        char *json_buffer,
                        int buffer_len);
-
-
 /**
    Functions for NGCP dissection
 **/
 struct msg_fake_sip * ngcp_parser(const u_char * payload,
                                   const u_int16_t size_payload);
-
 /**
    Functions for RTSP dissection
 **/
@@ -131,12 +132,12 @@ int rtsp_parser(const u_char *packet, int size_payload, char *json_buffer, int b
    hash function for integer number
    thanks to https://stackoverflow.com/a/12996028/859453
  */
-static unsigned int hash_ID(unsigned int ID)
-{
-    ID = ((ID >> 16) ^ ID) * 0x45d9f3b;
-    ID = ((ID >> 16) ^ ID) * 0x45d9f3b;
-    ID = (ID >> 16) ^ ID;
-    return ID;
-}
+/* unsigned int hash_ID(unsigned int ID) */
+/* { */
+/*     ID = ((ID >> 16) ^ ID) * 0x45d9f3b; */
+/*     ID = ((ID >> 16) ^ ID) * 0x45d9f3b; */
+/*     ID = (ID >> 16) ^ ID; */
+/*     return ID; */
+/* } */
 
 #endif
