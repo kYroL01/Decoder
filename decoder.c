@@ -1,8 +1,9 @@
 /**
    Main module of decoder
 
-   decoder - test program for network protocols
-   Copyright (C) 2016-2019 Michele Campus <michelecampus5@gmail.com>
+   Decoder - test program for network protocols
+
+   Copyright (C) 2016-2024 Michele Campus <michelecampus5@gmail.com>
 
    This file is part of decoder.
 
@@ -25,18 +26,11 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <signal.h>
-//#include <pthread.h>
 #include "structures.h"
 #include "functions.h"
 
-// setup for threads management
-/* pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER; */
-/* /\* pthread_t call_thread[MAX_NUM_THREADS]; *\/ */
-/* /\* pcap_t *sniffer_proto[MAX_SOCKETS]; *\/ */
-/* static u_int8_t num_threads = 1; */
-
 // default snap length (maximum bytes per packet to capture)
-#define SNAP_LEN 1518
+#define SNAP_LEN 3200
 
 // error
 #define DEVICE_ERROR(device, file)                                             \
@@ -65,9 +59,9 @@ void print_all_devices()
     pcap_if_t *all_devs;
     pcap_if_t *d;
     int i = 0;
-    
+
     printf("\nList of available devices on your system:\n\n");
-    
+
     if(pcap_findalldevs(&all_devs, err_buff) == -1)
     {
         fprintf(stderr,"Error in pcap_findalldevs: %s\n", err_buff);
@@ -97,7 +91,7 @@ sigint_handler()
 int main( int argc, char *argv[] )
 {
     struct flow_callback_proto * fcp; // for general stats
-    pcap_t *pcap_handle;    
+    pcap_t *pcap_handle;
     struct sigaction sigint_action;   // struct for signal registration
     sigset_t new_set, old_set;        // signal mask
     //long thread_id;
@@ -119,10 +113,6 @@ int main( int argc, char *argv[] )
         case 'i':
             device = optarg;
             break;
-
-            /* case 'n': */
-            /*   num_threads = atoi(optarg); */
-            /*   break; */
 
         case 'h':
             print_usage();
@@ -206,22 +196,6 @@ int main( int argc, char *argv[] )
 
     /* init struct for flow */
     fcp = flow_callback_proto_init(pcap_handle, save);
-
-    // initialization of flow per thread
-    /* for(thread_id = 0; thread_id < num_threads; thread_id++) { */
-    /*   memset(&call_thread[thread_id], 0, sizeof(call_thread[thread_id])); */
-    /*   call_thread[thread_id].flow_c = flow_callback_proto_init(thread_id, */
-    /*                                                              pcap_handle);     */
-    /* } */
-
-    // setting threads
-    /* if(num_threads > MAX_NUM_THREADS) num_threads = MAX_NUM_THREADS; */
-    /* for(thread_id = 0; thread_id < num_threads; thread_id++) */
-    /*   pthread_create(&call_thread[thread_id].pthread, NULL, run_loop_proto_collect, (void*) thread_id); */
-
-    /* /\* waiting for completion of thread work *\/ */
-    /* for(thread_id = 0; thread_id < num_threads; thread_id++) */
-    /*   pthread_join(call_thread[thread_id].pthread, NULL); */
 
     // loop for extract packets
     pcap_loop(fcp->pcap_handle, -1, callback_proto, (u_char*) fcp);

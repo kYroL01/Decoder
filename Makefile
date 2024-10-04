@@ -1,6 +1,6 @@
 #
 #   Decoder - Makefile
-#   Copyright (C) 2021 Michele Campus <fci1908@gmail.com>
+#   Copyright (C) 2024 Michele Campus <michelecampus5gmail.com>
 #
 #   This file is part of decoder.
 #
@@ -22,12 +22,11 @@ CC         =  gcc
 CFLAGS     = -Wall
 OPT        = -g -O0
 LDFLAGS    = -lpcap
-#LDPTHREAD  = -lpthread
 
 # --------------- DEPENDENCIES ---------------
 
-# DEPS       = structures.h define.h tls_ssl.h functions.h ngcp.h rtp.h rtcp.h rtsp.h globals.h
-SOURCES    = decoder.c functions.c tls_ssl.c rtp.c rtcp.c diameter.c ngcp.c rtsp.c
+# DEPS       = structures.h define.h tls_ssl.h functions.h ngcp.h rtp.h rtcp.h rtsp.h globals.h gtp.h
+SOURCES    = decoder.c functions.c tls_ssl.c rtp.c rtcp.c diameter.c ngcp.c rtsp.c gtp.c
 OBJ        = $(SOURCES:.c = .o)
 LIBSSL     = -I/usr/include/openssl -lcrypto
 LM         = -lm

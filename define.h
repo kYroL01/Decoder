@@ -1,8 +1,9 @@
 /**
    Definition of macro and header size
 
-   decoder - decode TLS/SSL traffic - save handshake and extract certificate
-   Copyright (C) 2016-2017 Michele Campus <fci1908@gmail.com>
+   Decoder - decode TLS/SSL traffic - save handshake and extract certificate
+
+   Copyright (C) 2016-2024 Michele Campus <fci1908@gmail.com>
 
    This file is part of decoder.
 

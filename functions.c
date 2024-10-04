@@ -1,10 +1,9 @@
 /**
    Implementation of functions.h
 
-   decoder - test program for network protocols
-   Copyright (C) 2016-2021 Michele Campus <michelecampus5@gmail.com>
+   Copyright (C) 2016-2024 Michele Campus <michelecampus5@gmail.com>
 
-   This file is part of decoder.
+   This file is part of Decoder.
 
    decoder is free software: you can redistribute it and/or modify it under the
    terms of the GNU General Public License as published by the Free Software
@@ -55,7 +54,7 @@ static inline uint8_t getBits(uint16_t x, int p, int n)
 }
 
 // Init data flow struct
-struct flow_callback_proto * flow_callback_proto_init(/* int thread_id, */pcap_t * p_handle, u_int8_t save)
+struct flow_callback_proto *flow_callback_proto_init(pcap_t * p_handle, u_int8_t save)
 {
     struct flow_callback_proto * flow = malloc(sizeof(struct flow_callback_proto));
     if(!flow) perror("fcp malloc failed");
@@ -183,16 +182,46 @@ static unsigned int process_packet(const u_char * payload,
                                    const u_int16_t dst_port,
                                    const u_int8_t proto_id_l3,
                                    struct flow_callback_proto * fcp,
-                                   u_int8_t save
-                                   /* struct Hash_Table * HT_Flows */)
+                                   u_int8_t save)
 {
     int ret = 0;
+    char* json_buffer = NULL;
 
     /* ################# */
     /**  UDP Protocols  **/
     /* ################# */
     if(proto_id_l3 == IPPROTO_UDP) {
 
+
+        /* ******* */
+        /**
+           check for GTP protocol
+        */
+        // dissect
+        ret = gtp_parser(payload,
+                         size_payload,
+                         src_port,
+                         dst_port,
+                         json_buffer,
+                         JSON_BUFFER_LEN);
+        if(ret == -1)
+            fprintf(stderr, "error on gtp_dissector\n");
+
+        printf("\nGTP protocol FOUND ->\n");
+        /* Print JSON buffer */
+        //if(ret > 0)
+        //   printf("%s\n\n", json_buffer);
+
+        /* free json_buffer */
+        if(json_buffer)
+            free(json_buffer);
+
+        // return code for GTP
+        ret = 7;
+        goto end;
+
+
+        /* ******* */
         /**
            check for NGCP protocol
         */
@@ -232,8 +261,10 @@ static unsigned int process_packet(const u_char * payload,
             goto end;
         }
 
-        char* json_buffer = malloc(sizeof(char) * JSON_BUFFER_LEN);
+        // define json buffer
+        json_buffer = calloc(JSON_BUFFER_LEN, sizeof(char));
 
+        /* ******* */
         /**
            check for RTP protocol
         */
@@ -258,17 +289,19 @@ static unsigned int process_packet(const u_char * payload,
 
         printf("\nRTP protocol FOUND ->\n");
         /* Print JSON buffer */
-        /* if(ret > 0) */
-        /*     printf("%s\n\n", json_buffer); */
+        if(ret > 0)
+            printf("%s\n\n", json_buffer);
 
         /* free json_buffer */
-        free(json_buffer);
+        if(json_buffer)
+            free(json_buffer);
 
         // return code for RTP
         ret = 6;
         goto end;
 
 
+        /* ******* */
         /**
            check for RTCP protocol
         */
@@ -302,21 +335,12 @@ static unsigned int process_packet(const u_char * payload,
             printf("%s\n\n", json_buffer);
 
         /* free json_buffer */
-        free(json_buffer);
+        if(json_buffer)
+            free(json_buffer);
 
         // return code for RTCP
         ret = 2;
         goto end;
-
-        /* /\** */
-        /*    check for T38 protocol */
-        /* *\/ */
-        /* // dissect */
-        /* ret = t38_parser(payload, size_payload); */
-        /* if(ret == -1) */
-        /*     fprintf(stderr, "error on t38_dissector\n"); */
-        /* printf("\nRTCP protocol FOUND ->\n"); */
-        /* ret = 3; */
     }
 
     /* ################# */
@@ -324,9 +348,10 @@ static unsigned int process_packet(const u_char * payload,
     /* ################# */
     else {
 
-        // declare JSON buffer
-        char* json_buffer = malloc(sizeof(char) * JSON_BUFFER_LEN);
+        // define JSON buffer
+        json_buffer = calloc(JSON_BUFFER_LEN, sizeof(char));
 
+        /* ******* */
         /**
            Check RTSP dissector
         */
@@ -351,9 +376,14 @@ static unsigned int process_packet(const u_char * payload,
                 printf("%s\n", json_buffer);
                 goto end;
             }
+
+            /* free json_buffer */
+            if(json_buffer)
+                free(json_buffer);
+
         }
 
-
+        /* ******* */
         /**
            Check TLS dissector
         */
@@ -449,8 +479,14 @@ static unsigned int process_packet(const u_char * payload,
                 ret = 4;
                 goto end;
             }
+
+            /* free json_buffer */
+            if(json_buffer)
+                free(json_buffer);
         }
 
+
+        /* ******* */
         /**
            Check DIAMETER dissector
         */
@@ -470,7 +506,39 @@ static unsigned int process_packet(const u_char * payload,
                 /* Print JSON buffer */
                 printf("%s\n", json_buffer);
             }
+
+            /* free json_buffer */
+            if(json_buffer)
+                free(json_buffer);
         }
+
+
+        /* ******* */
+        /**
+           check for GTP protocol
+        */
+        // dissect
+        ret = gtp_parser(payload,
+                         size_payload,
+                         src_port,
+                         dst_port,
+                         json_buffer,
+                         JSON_BUFFER_LEN);
+        if(ret == -1)
+            fprintf(stderr, "error on gtp_dissector\n");
+
+        printf("\nGTP protocol FOUND ->\n");
+        /* Print JSON buffer */
+        //if(ret > 0)
+        //   printf("%s\n\n", json_buffer);
+
+        /* free json_buffer */
+        if(json_buffer)
+            free(json_buffer);
+
+        // return code for GTP
+        ret = 7;
+        goto end;
     }
  end:
     return ret;
@@ -479,9 +547,6 @@ static unsigned int process_packet(const u_char * payload,
 
 // Protocol callback function
 void callback_proto(u_char *args, const struct pcap_pkthdr *pkt_header, const u_char *packet) {
-
-    // cast args to int thread
-    /* int thread_id = *((int*)args); */
 
     // define flow based on thread_id on call_thread array
     /* struct flow_callback_proto * fcp = call_thread[thread_id].flow_c; */
@@ -703,6 +768,8 @@ void callback_proto(u_char *args, const struct pcap_pkthdr *pkt_header, const u_
         // MPLS
     case ETHERTYPE_MPLS_UNI:
     case ETHERTYPE_MPLS_MULTI:
+        if(link_offset + 4 >= (int)pkt_header->caplen)
+            return;
         // update stats
         fcp->stats.mpls_pkts++;
         mpls.u32 = *((uint32_t *) &packet[link_offset]);
@@ -830,8 +897,6 @@ void callback_proto(u_char *args, const struct pcap_pkthdr *pkt_header, const u_
     if(size_payload > 0)
         printf("\t Payload (%d bytes):\n", size_payload);
 
-
-
     /**
        This is the function to process a packet.
 
@@ -849,7 +914,7 @@ void callback_proto(u_char *args, const struct pcap_pkthdr *pkt_header, const u_
                            fcp,
                            s
                            /* HT_Flows */);
-    if(check == 4) { //TODO FIX
+    if(check == 4) {
         printf("TLS/SSL packet founded and parsed\n");
         fcp->stats.num_tls_pkts++;
         print_HashTable(ip_version);
@@ -866,7 +931,6 @@ void callback_proto(u_char *args, const struct pcap_pkthdr *pkt_header, const u_
         printf("RTCP Protocol founded and parsed\n");
         fcp->stats.num_rtcp_pkts++;
     }
-
     else if(check == 5) {
         printf("RTSP Protocol founded and parsed\n");
         fcp->stats.num_rtsp_pkts++;
@@ -874,6 +938,10 @@ void callback_proto(u_char *args, const struct pcap_pkthdr *pkt_header, const u_
     else if(check == 6) {
         printf("RTP Protocol founded and parsed\n");
         fcp->stats.num_rtp_pkts++;
+    }
+    else if(check == 7) {
+        printf("GTP Protocol founded and parsed\n");
+        fcp->stats.num_gtp_pkts++;
     }
     else {
         printf("\n\t Other protocol L4\n\n");
@@ -905,6 +973,7 @@ void print_stats(struct flow_callback_proto * fcp)
     printf(" # TLS handshake pkts          = %d\n",   fcp->stats.num_tls_pkts);
     printf(" # RTP pkts                    = %d\n",   fcp->stats.num_rtp_pkts);
     printf(" # RTCP pkts                   = %d\n",   fcp->stats.num_rtcp_pkts);
+    printf(" # GTP pkts                    = %d\n",   fcp->stats.num_gtp_pkts);
     printf(" # DIAMETER pkts               = %d\n",   fcp->stats.num_diameter_pkts);
     printf(" # NGCP pkts                   = %d\n",   fcp->stats.num_ngcp_pkts);
     printf(" # RTSP pkts                   = %d\n",   fcp->stats.num_rtsp_pkts);

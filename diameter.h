@@ -1,7 +1,7 @@
 /**
-   DIAMETER dissector
+   Header file DIAMETER protocol
 
-   Copyright (C) 2016-2021 Michele Campus <michelecampus5@gmail.com>
+   Copyright (C) 2016-2024 Michele Campus <michelecampus5@gmail.com>
 
    Based on code from https://github.com/moonlight-stream/moonlight-common-c/blob/master/src/RtspParser.c
 
@@ -75,7 +75,7 @@
 #define  EAP          5
 #define  SIP_ID       6
 #define  MIP6I        7
-#define  MIP6A        8 
+#define  MIP6A        8
 #define  QOS          9
 #define  CUPD         10
 #define  IKESK        11

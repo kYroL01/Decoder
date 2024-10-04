@@ -6,7 +6,7 @@
 3. Improve flow detection and create separate module
 4. Add comments to prototype functions (for DOC)
 5. Implement CMAKE
-6. Add IPv4 and IPv6 reasembly (ipreasm library)
+6. Add IPv4 and IPv6 reassembly (ipreasm library)
 7. Add Travis check
 8. Add 2 bitmask array for protocols (excluded and found)
 9. [ADD new improvments]

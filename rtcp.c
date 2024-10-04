@@ -1,7 +1,7 @@
 /**
-   rtcp protocol dissection
+   RTCP protocol
 
-   Copyright (C) 2016-2019 Michele Campus <michelecampus5@gmail.com>
+   Copyright (C) 2016-2024 Michele Campus <michelecampus5@gmail.com>
 
    This file is part of decoder.
 
@@ -57,7 +57,7 @@ int rtcp_parser(char *packet, int len, char *json_buffer, int buffer_len) {
 	char *rptr;
 
     // build the JSON buffer
-	ret+=snprintf(json_buffer, buffer_len, "{ ");
+	ret += snprintf(json_buffer, buffer_len, "{ ");
 
 	int pno = 0, total = len;
 	while(rtcp) {
@@ -130,7 +130,7 @@ int rtcp_parser(char *packet, int len, char *json_buffer, int buffer_len) {
 
             int sdes_report_count = 0;
 
-            char *end=(char*) rptr+(4*(rtcp_header_get_length(&sdes->header)+1)-15);
+            char *end = (char*) rptr + (4*(rtcp_header_get_length(&sdes->header) + 1) -15);
 
             ret += snprintf(json_buffer+ret, buffer_len - ret, SDES_REPORT_BEGIN_JSON, ntohl(sdes->ssrc), sdes_chunk_get_csrc(&sdes->chunk));
 
@@ -158,7 +158,7 @@ int rtcp_parser(char *packet, int len, char *json_buffer, int buffer_len) {
             }
 
             /* cut , off */
-            ret-=1;
+            ret -= 1;
 
             ret += snprintf(json_buffer + ret, buffer_len - ret, SDES_REPORT_END_JSON, sdes_report_count);
 

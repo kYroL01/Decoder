@@ -1,7 +1,7 @@
 /**
    RTSP dissector
 
-   Copyright (C) 2016-2019 Michele Campus <michelecampus5@gmail.com>
+   Copyright (C) 2016-2024 Michele Campus <michelecampus5@gmail.com>
 
    Based on code from https://github.com/moonlight-stream/moonlight-common-c/blob/master/src/RtspParser.c
 
@@ -48,7 +48,7 @@ int rtsp_parser(const u_char *packet, int size_payload, char *json_buffer, int b
     int ret = -1, js_ret = 0;
     int total = 0;
     uint16_t l_inter = 0;
-    char *p = packet;
+    char *p = (char*) packet;
 
     // check param
     if(!packet || size_payload == 0) {
@@ -61,7 +61,7 @@ int rtsp_parser(const u_char *packet, int size_payload, char *json_buffer, int b
 
     /* Check for Magic byte (interleaved pkt) */
     /**
-       NOTE: now we just parsed the RTP pkt; 
+       NOTE: now we just parsed the RTP pkt;
        then we need to export in some way
      **/
     if(*p == MAGIC) {
@@ -80,7 +80,7 @@ int rtsp_parser(const u_char *packet, int size_payload, char *json_buffer, int b
         }
         else return -2; // ERROR - found MAGIC but not interleaved in SETUP
     }
-    
+
     else {
     ret = rtsp_message_parser(msg, (char*) packet, size_payload);
 
@@ -144,7 +144,7 @@ int rtsp_parser(const u_char *packet, int size_payload, char *json_buffer, int b
 
     if(ret != 0) return -1;
     }
-    
+
     return 0;
 }
 

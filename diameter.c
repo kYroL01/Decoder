@@ -1,7 +1,7 @@
 /**
    DIAMETER dissector
 
-   Copyright (C) 2016-2021 Michele Campus <michelecampus5@gmail.com>
+   Copyright (C) 2016-2024 Michele Campus <michelecampus5@gmail.com>
 
    Based on code from https://github.com/moonlight-stream/moonlight-common-c/blob/master/src/RtspParser.c
 
@@ -44,8 +44,6 @@ static char *visit_net_id;
 static char *srv_name;
 static char *username_id;
 static char *user_data;
-static char *codec_data_ul;
-static char *codec_data_dl;
 static u_int32_t auth_app_id;
 static u_int32_t vend_id;
 static u_int32_t res_code;
@@ -53,11 +51,6 @@ static u_int32_t orgst_id;
 static u_int32_t exp_res_code;
 static u_int32_t subscr_id_type;
 static u_int32_t country_code;
-static u_int32_t media_comp_num;
-static u_int32_t media_type;
-static u_int32_t max_req_band_ul;
-static u_int32_t max_req_band_dl;
-static u_int32_t flow_status;
 static u_int32_t ip_can_type;
 static u_int32_t rat_type;
 char buff_tm[30] = {0};
@@ -124,7 +117,7 @@ static u_int32_t swap_endian(u_int32_t num)
 int diameter_parser(const unsigned char *packet, int size_payload, char *json_buffer, int buffer_len)
 {
     char type[20] = {0};
-    char hop_by_hop_str[20] = {0};    
+    char hop_by_hop_str[20] = {0};
     char end_to_end_str[20] = {0};
     /* char *app_id_str = NULL; */
     int offset = 0, js_ret = 0;
@@ -133,7 +126,7 @@ int diameter_parser(const unsigned char *packet, int size_payload, char *json_bu
     u_int32_t end_to_end_id;
     u_int16_t command;
     u_int8_t  flag;
-    
+
     // check param
     if(!packet || size_payload == 0) {
         fprintf(stderr, "::Error:: parameters not valid\n");
@@ -169,7 +162,7 @@ int diameter_parser(const unsigned char *packet, int size_payload, char *json_bu
 
     /* COMMAND */
     command = diameter->com_code[2] + (diameter->com_code[1] << 8) + (diameter->com_code[0] << 8);
-        
+
     /* APPLICATION-ID */
     app_id = diameter->app_id;
     app_id = swap_endian(app_id);
@@ -188,14 +181,14 @@ int diameter_parser(const unsigned char *packet, int size_payload, char *json_bu
     end_to_end_id = diameter->end_id;
     end_to_end_id = swap_endian(end_to_end_id);
     sprintf(end_to_end_str, "%x", end_to_end_id);
-    
+
 
     /*** CREATE JSON BUFFER ***/
     js_ret += snprintf(json_buffer, buffer_len,
                        DIAMETER_HEADER_JSON, type, command, app_id, hop_by_hop_str, end_to_end_str);
-        
+
     /***** END of parsing Diamter Header *****/
-    
+
 
     // Calculate the length of payload from header field
     u_int16_t length = diameter->length[2] + (diameter->length[1] << 8) + (diameter->length[0] << 8);
@@ -256,7 +249,7 @@ int diameter_parser(const unsigned char *packet, int size_payload, char *json_bu
             _vendor_id = 4;
         }
 
-        switch(avp_code) {        
+        switch(avp_code) {
 
         case SESS_ID: {
 
@@ -350,7 +343,7 @@ int diameter_parser(const unsigned char *packet, int size_payload, char *json_bu
                                "\"auth-req-type\":\"%s\", ", auth_req_type);
             // free
             if(auth_req_type)
-                free(auth_req_type);            
+                free(auth_req_type);
             break;
         }
 
@@ -481,7 +474,7 @@ int diameter_parser(const unsigned char *packet, int size_payload, char *json_bu
                                "\"destination-realm\":\"%s\", ", dst_realm);
             // free
             if(dst_realm)
-                free(dst_realm);            
+                free(dst_realm);
             break;
         }
 
@@ -548,11 +541,11 @@ int diameter_parser(const unsigned char *packet, int size_payload, char *json_bu
             start += (res_len + padd);   // move pointer forward
             offset += (res_len + padd);  // update offset
 
-            if(res_code >= 1000 && res_code < 2000) strncpy(rc_buff, "Informational", strlen("Informational"));
-            else if(res_code >= 2000 && res_code < 3000) strncpy(rc_buff, "Success", strlen("Success"));
-            else if(res_code >= 3000 && res_code < 4000) strncpy(rc_buff, "Protocol Errors", strlen("Protocol Errors"));
-            else if(res_code >= 4000 && res_code < 5000) strncpy(rc_buff, "Transient Failures", strlen("Transient Failures"));
-            else if(res_code >= 5000 && res_code < 6000) strncpy(rc_buff, "Permanent Failure", strlen("Permanent Failure"));
+            if(res_code >= 1000 && res_code < 2000) strncpy(rc_buff, "Informational", sizeof(rc_buff));
+            else if(res_code >= 2000 && res_code < 3000) strncpy(rc_buff, "Success", sizeof(rc_buff));
+            else if(res_code >= 3000 && res_code < 4000) strncpy(rc_buff, "Protocol Errors", sizeof(rc_buff));
+            else if(res_code >= 4000 && res_code < 5000) strncpy(rc_buff, "Transient Failures", sizeof(rc_buff));
+            else if(res_code >= 5000 && res_code < 6000) strncpy(rc_buff, "Permanent Failure", sizeof(rc_buff));
 
             // put buffer in JSON buffer
             js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
@@ -667,7 +660,7 @@ int diameter_parser(const unsigned char *packet, int size_payload, char *json_bu
         }
 
         case SUBSCR_ID: { // Grouped
-            
+
             // check for padding
             l = avp_len;
             padd = 0;
@@ -691,7 +684,7 @@ int diameter_parser(const unsigned char *packet, int size_payload, char *json_bu
 
             start += (subscr_id_type_len + padd);   // move pointer forward
             offset += (subscr_id_type_len + padd);  // update offset
-            
+
             // put buffer in JSON buffer
             js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
                                "\"subscr-id-type\":%u, ", subscr_id_type);
@@ -701,12 +694,12 @@ int diameter_parser(const unsigned char *packet, int size_payload, char *json_bu
         case SUBSCR_ID_DATA: {
             char subscr_id_data[50] = {0};
             char cc[3] = {0};
-            u_int16_t subscr_id_data_len = avp_len - AVP_HEADER_LEN - _vendor_id;                       
-            
+            u_int16_t subscr_id_data_len = avp_len - AVP_HEADER_LEN - _vendor_id;
+
             memcpy(subscr_id_data, start, subscr_id_data_len);
             memcpy(cc, subscr_id_data, 2);
             country_code = atoi(cc);
-            
+
             // check for padding
             l = avp_len;
             padd = 0;
@@ -716,7 +709,7 @@ int diameter_parser(const unsigned char *packet, int size_payload, char *json_bu
 
             start += (subscr_id_data_len + padd);   // move pointer forward
             offset += (subscr_id_data_len + padd);  // update offset
-            
+
             // put buffer in JSON buffer
             js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
                                "\"country-code\":%u, ", country_code);
@@ -777,14 +770,14 @@ int diameter_parser(const unsigned char *packet, int size_payload, char *json_bu
         }
 
         case USERNAME: {
-            
+
             u_int16_t username_len = avp_len - AVP_HEADER_LEN - _vendor_id;
             username_id = calloc(username_len+1, sizeof(char));
             memcpy(username_id, start, username_len);
-            
+
             start += (username_len + padd);   // move pointer forward
             offset += (username_len + padd);  // update offset
-            
+
             // put buffer in JSON buffer
             js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
                                "\"user-name\":\%s\", ", username_id);
@@ -832,7 +825,7 @@ int diameter_parser(const unsigned char *packet, int size_payload, char *json_bu
 
             start += (ip_can_type_len + padd);   // move pointer forward
             offset += (ip_can_type_len + padd);  // update offset
-            
+
             // put buffer in JSON buffer
             js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
                                "\"ip-can-type\":%u, ", ip_can_type);
@@ -842,7 +835,7 @@ int diameter_parser(const unsigned char *packet, int size_payload, char *json_bu
         case RAT_TYPE: {
             u_int16_t rat_type_len = avp_len - AVP_HEADER_LEN - _vendor_id;
             rat_type = start[3] + (start[2] << 8) + (start[1] << 8) + (start[0] << 8);
-            
+
             // check for padding
             l = avp_len;
             padd = 0;
@@ -852,7 +845,7 @@ int diameter_parser(const unsigned char *packet, int size_payload, char *json_bu
 
             start += (rat_type_len + padd);   // move pointer forward
             offset += (rat_type_len + padd);  // update offset
-            
+
             // put buffer in JSON buffer
             js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
                                "\"rat-type\":%u, ", rat_type);

@@ -1,7 +1,7 @@
 /**
-   Parser for ncgp protocol
+   NCGP dissector
 
-   Copyright (C) 2016-2018 Michele Campus <michelecampus5@gmail.com>
+   Copyright (C) 2016-2024 Michele Campus <michelecampus5@gmail.com>
 
    This file is part of decoder.
 
@@ -31,7 +31,7 @@ struct msg_fake_sip * ngcp_parser(const u_char * payload,
                                   const u_int16_t size_payload)
 {
     // pointer of beginning of payload
-    const u_char *p = payload;
+    const char *p = (char*) payload;
 
     // Fake msg SIP
     struct msg_fake_sip *msg_sf = NULL;
