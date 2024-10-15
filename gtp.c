@@ -42,10 +42,6 @@ int gtp_parser(const unsigned char *packet, int size_payload,  const u_int16_t s
 
     if(size_payload > sizeof(struct gtp_header)) {
 
-        u_int32_t gtp_u  = ntohs(2152);
-        u_int32_t gtp_c  = ntohs(2123);
-        u_int32_t gtp_prime = ntohs(3386);
-
         // cast to GTP header
         struct gtp_header *gtp = (struct gtp_header *) packet;
 
@@ -54,7 +50,7 @@ int gtp_parser(const unsigned char *packet, int size_payload,  const u_int16_t s
         u_int16_t msg_len = ntohs(gtp->msg_len);
 
         // GTP_U
-        if((src_port == gtp_u) || (dst_port == gtp_u)) {
+        if((src_port == GTP_U) || (dst_port == GTP_U)) {
             if((version == 1) && (pt == 1) &&
                (size_payload >= HEADER_LEN_GTP_U) && (msg_len <= (size_payload - HEADER_LEN_GTP_U))) {
                 printf("This is GTP-U\n");
@@ -62,7 +58,7 @@ int gtp_parser(const unsigned char *packet, int size_payload,  const u_int16_t s
             }
         }
         // GTP_C
-        if((src_port == gtp_c) || (dst_port == gtp_c)) {
+        if((src_port == GTP_C) || (dst_port == GTP_C)) {
             if((version == 1) &&
                 (size_payload >= HEADER_LEN_GTP_C_V1) &&
                 (msg_len == (size_payload - HEADER_LEN_GTP_C_V1)) &&
@@ -76,7 +72,7 @@ int gtp_parser(const unsigned char *packet, int size_payload,  const u_int16_t s
             }
         }
         // GTP_PRIME
-        if((src_port == gtp_prime) || (dst_port == gtp_prime)) {
+        if((src_port == GTP_PRIME) || (dst_port == GTP_PRIME)) {
             if((pt == 0) &&
                ((gtp->flags & 0x0E) >> 1 == 0x7) && (size_payload >= HEADER_LEN_GTP_PRIME) &&
                (msg_len <= (size_payload - HEADER_LEN_GTP_PRIME)) &&

@@ -26,6 +26,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define GTP_U     2152
+#define GTP_C     2123
+#define GTP_PRIME 3386
+
 #define HEADER_LEN_GTP_U        8
 #define HEADER_LEN_GTP_C_V1     8
 #define HEADER_LEN_GTP_C_V2     4

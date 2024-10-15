@@ -198,16 +198,22 @@ static unsigned int process_packet(const u_char * payload,
            check for GTP protocol
         */
         // dissect
+        if((src_port == 2152 || dst_port == 2152) ||
+           (src_port == 2123 || dst_port == 2123) ||
+           (src_port == 3386 || dst_port == 3386))
         ret = gtp_parser(payload,
                          size_payload,
                          src_port,
                          dst_port,
                          json_buffer,
                          JSON_BUFFER_LEN);
-        if(ret == -1)
-            fprintf(stderr, "error on gtp_dissector\n");
+        if(ret <= 0) {
+            fprintf(stderr, "Not a GTP packet\n");
+            return ret;
+        } else {
+            printf("GTP protocol FOUND ->\n");
+        }
 
-        printf("\nGTP protocol FOUND ->\n");
         /* Print JSON buffer */
         //if(ret > 0)
         //   printf("%s\n\n", json_buffer);
@@ -284,10 +290,12 @@ static unsigned int process_packet(const u_char * payload,
                          size_payload,
                          json_buffer,
                          JSON_BUFFER_LEN);
-        if(ret == -1)
-            fprintf(stderr, "error on rtp_dissector\n");
+        if(ret == -1) {
+            fprintf(stderr, "Not an RTP packet\n");
+        } else {
+            printf("RTP protocol FOUND ->\n");
+        }
 
-        printf("\nRTP protocol FOUND ->\n");
         /* Print JSON buffer */
         if(ret > 0)
             printf("%s\n\n", json_buffer);
@@ -326,10 +334,12 @@ static unsigned int process_packet(const u_char * payload,
                           size_payload,
                           json_buffer,
                           JSON_BUFFER_LEN);
-        if(ret == -1)
-            fprintf(stderr, "error on rtcp_dissector\n");
+        if(ret == -1) {
+            fprintf(stderr, "Not an RTCP packet\n");
+        } else {
+            printf("RTCP protocol FOUND ->\n");
+        }
 
-        printf("\nRTCP protocol FOUND ->\n");
         /* Print JSON buffer */
         if(ret > 0)
             printf("%s\n\n", json_buffer);
@@ -365,15 +375,16 @@ static unsigned int process_packet(const u_char * payload,
                               json_buffer,
                               JSON_BUFFER_LEN);
             if(ret == -1) {
-                fprintf(stderr, "Not an rtsp packet\n");
-            }
-            else if(ret == -2) {
+                fprintf(stderr, "Not an RTSP packet\n");
+            } else if(ret == -2) {
                 fprintf(stderr, "ERROR on parsing interleaved frame\n");
-            }
-            else {
+            } else {
                 ret = 5;
                 /* Print JSON buffer */
                 printf("%s\n", json_buffer);
+                /* free json_buffer */
+                if(json_buffer)
+                    free(json_buffer);
                 goto end;
             }
 
@@ -474,17 +485,19 @@ static unsigned int process_packet(const u_char * payload,
                 // free structs
                 free(flow_key);
                 free(handshake);
+                return ret;
             }
             else {
                 ret = 4;
+                /* free json_buffer */
+                if(json_buffer)
+                    free(json_buffer);
                 goto end;
             }
-
             /* free json_buffer */
             if(json_buffer)
                 free(json_buffer);
         }
-
 
         /* ******* */
         /**
@@ -499,12 +512,16 @@ static unsigned int process_packet(const u_char * payload,
                                   json_buffer,
                                   JSON_BUFFER_LEN);
             if(ret == -1) {
-                fprintf(stderr, "Not a diameter packet\n");
-            }
-            else {
+                fprintf(stderr, "Not a DIAMETER packet\n");
+                return ret;
+            } else {
                 ret = 3;
                 /* Print JSON buffer */
                 printf("%s\n", json_buffer);
+                /* free json_buffer */
+                if(json_buffer)
+                    free(json_buffer);
+                goto end;
             }
 
             /* free json_buffer */
@@ -524,10 +541,13 @@ static unsigned int process_packet(const u_char * payload,
                          dst_port,
                          json_buffer,
                          JSON_BUFFER_LEN);
-        if(ret == -1)
-            fprintf(stderr, "error on gtp_dissector\n");
+        if(ret == -1) {
+            fprintf(stderr, "Not a GTP packet\n");
+            return ret;
+        } else {
+            printf("GTP protocol FOUND ->\n");
+        }
 
-        printf("\nGTP protocol FOUND ->\n");
         /* Print JSON buffer */
         //if(ret > 0)
         //   printf("%s\n\n", json_buffer);
