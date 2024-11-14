@@ -1,6 +1,9 @@
-# Decoder
+[![Generic badge](https://img.shields.io/badge/ANSI-C-green.svg)](Ansi-C)
+[![Generic badge](https://img.shields.io/badge/Networking-orange.svg)](Networking)
+[![Generic badge](https://img.shields.io/badge/DPI-blue.svg)](https://en.wikipedia.org/wiki/Deep_packet_inspection)
 
-## Demo standalone project for protocol dissectors test
+# Decoder
+Standalone project for protocol dissectors test
 
 ### HOW TO WORK:
 
