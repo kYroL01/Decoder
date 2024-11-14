@@ -5,14 +5,15 @@
 # Decoder
 Standalone project for protocol dissectors test
 
-### HOW TO WORK:
-
-`make build`
-
-`sudo ./decoder -i [device] | -p [pcap]`
+The project is created to capture packets (live or from pcap) and decode them by dissectors
 
 
-The project is created to sniff packets (live or from pcaps) and decode by dissectors
+### Build and Run:
+
+```bash
+make build
+sudo ./decoder -i [device] | -p [pcap]`
+```
 
 
 [TODO list](https://github.com/kYroL01/Decoder/blob/master/TODO.md)
