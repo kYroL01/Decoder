@@ -1,7 +1,7 @@
 # TODO
 
 ### Core improvments
-1. Find a better way to implement how the dissector are called
+1. [DONE] Find a better way to implement how the dissector are called
 2. Implement multi-thread scenario
 3. Improve flow detection and create separate module
 4. Add comments to prototype functions (for DOC)

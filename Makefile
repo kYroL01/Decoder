@@ -26,7 +26,7 @@ LDFLAGS    = -lpcap
 # --------------- DEPENDENCIES ---------------
 
 # DEPS       = structures.h define.h tls_ssl.h functions.h ngcp.h rtp.h rtcp.h rtsp.h globals.h gtp.h
-SOURCES    = decoder.c functions.c tls_ssl.c rtp.c rtcp.c diameter.c ngcp.c rtsp.c gtp.c
+SOURCES    = decoder.c functions.c dissector.c proto_wrappers.c tls_ssl.c rtp.c rtcp.c diameter.c ngcp.c rtsp.c gtp.c
 OBJ        = $(SOURCES:.c = .o)
 LIBSSL     = -I/usr/include/openssl -lcrypto
 LM         = -lm
