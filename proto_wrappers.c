@@ -264,7 +264,7 @@ void register_all_dissectors(void)
     dissector_register(IPPROTO_TCP, 2152, dissect_gtp,      "GTP",      7);
     dissector_register(IPPROTO_UDP, 0,    dissect_ngcp,     "NGCP",     2);
     dissector_register(IPPROTO_UDP, 0,    dissect_rtp,      "RTP",      6);
-    dissector_register(IPPROTO_UDP, 0,    dissect_rtcp,     "RTCP",     2);
+    dissector_register(IPPROTO_UDP, 0,    dissect_rtcp,     "RTCP",     1);
 
     initialized = 1;
 }
