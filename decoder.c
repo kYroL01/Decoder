@@ -28,6 +28,7 @@
 #include <signal.h>
 #include "structures.h"
 #include "functions.h"
+#include "proto_wrappers.h"
 
 // default snap length (maximum bytes per packet to capture)
 #define SNAP_LEN 3200
@@ -196,6 +197,7 @@ int main( int argc, char *argv[] )
 
     /* init struct for flow */
     fcp = flow_callback_proto_init(pcap_handle, save);
+    register_all_dissectors();
 
     // loop for extract packets
     pcap_loop(fcp->pcap_handle, -1, callback_proto, (u_char*) fcp);
