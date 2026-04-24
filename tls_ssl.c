@@ -312,7 +312,6 @@ int tls_parser(const u_char **payload,
                const u_int8_t proto_id_l3,
                u_int8_t s)
 {
-    struct Hash_Table *el;
     struct Handshake *handshake;
     const u_int8_t *pp = *payload;
 
@@ -822,19 +821,13 @@ int tls_parser(const u_char **payload,
 
                 case FINISHED:
                     {
-                        struct Hash_Table *old;
-                        old = malloc(sizeof(struct Hash_Table));
-
-                        memcpy(&old->flow_key_hash, flow_key, sizeof(struct Flow_key));
-                        /* old->flow_key_hash = flow_key; */
+                        struct Hash_Table *old = NULL;
 
                         // set handshake fin to TRUE
                         HASH_FIND(hh, HT_Flows, flow_key,
                                   sizeof(struct Flow_key), old);
                         if(old) {
                             old->is_handsk_fin = TRUE;
-                            HASH_REPLACE(hh, HT_Flows, flow_key_hash,
-                                         sizeof(struct Flow_key), old, el);
                         }
                         more_records = 1;
                         break;
