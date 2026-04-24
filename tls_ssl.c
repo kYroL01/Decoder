@@ -224,7 +224,7 @@ static void add_flow(/* struct Hash_Table * HT_Flows,  */struct Flow_key *key, s
     struct Hash_Table * flow_in;
 
     /* key already in the hash? */
-    HASH_FIND(hh, HT_Flows, &key, sizeof(struct Flow_key), flow_in);
+    HASH_FIND(hh, HT_Flows, key, sizeof(struct Flow_key), flow_in);
 
     /* new flow: add the flow if the key is not used */
     if(!flow_in) {
@@ -312,7 +312,6 @@ int tls_parser(const u_char **payload,
                const u_int8_t proto_id_l3,
                u_int8_t s)
 {
-    struct Hash_Table *el;
     struct Handshake *handshake;
     const u_int8_t *pp = *payload;
 
@@ -822,19 +821,13 @@ int tls_parser(const u_char **payload,
 
                 case FINISHED:
                     {
-                        struct Hash_Table *old;
-                        old = malloc(sizeof(struct Hash_Table));
-
-                        memcpy(&old->flow_key_hash, flow_key, sizeof(struct Flow_key));
-                        /* old->flow_key_hash = flow_key; */
+                        struct Hash_Table *old = NULL;
 
                         // set handshake fin to TRUE
-                        HASH_FIND(hh, HT_Flows, &flow_key,
+                        HASH_FIND(hh, HT_Flows, flow_key,
                                   sizeof(struct Flow_key), old);
                         if(old) {
                             old->is_handsk_fin = TRUE;
-                            HASH_REPLACE(hh, HT_Flows, flow_key_hash,
-                                         sizeof(struct Flow_key), old, el);
                         }
                         more_records = 1;
                         break;
