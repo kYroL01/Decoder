@@ -224,7 +224,7 @@ static void add_flow(/* struct Hash_Table * HT_Flows,  */struct Flow_key *key, s
     struct Hash_Table * flow_in;
 
     /* key already in the hash? */
-    HASH_FIND(hh, HT_Flows, &key, sizeof(struct Flow_key), flow_in);
+    HASH_FIND(hh, HT_Flows, key, sizeof(struct Flow_key), flow_in);
 
     /* new flow: add the flow if the key is not used */
     if(!flow_in) {
@@ -829,7 +829,7 @@ int tls_parser(const u_char **payload,
                         /* old->flow_key_hash = flow_key; */
 
                         // set handshake fin to TRUE
-                        HASH_FIND(hh, HT_Flows, &flow_key,
+                        HASH_FIND(hh, HT_Flows, flow_key,
                                   sizeof(struct Flow_key), old);
                         if(old) {
                             old->is_handsk_fin = TRUE;

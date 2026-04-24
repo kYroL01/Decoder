@@ -52,7 +52,7 @@ uninstall:
 	rm -f /usr/bin/decoder
 
 build : $(OBJ)
-	$(CC) $(CFLAGS) $(OPT) $(LDFLAGS) $(LIBSSL) $(LM) $(OBJ) -o decoder
+	$(CC) $(CFLAGS) $(OPT) $(OBJ) $(LDFLAGS) $(LIBSSL) $(LM) -o decoder
 
 %.o : %.c
 	$(CC) $(CFLAGS) -c $<
