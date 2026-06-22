@@ -827,8 +827,19 @@ int diameter_parser(const unsigned char *packet, int size_payload, char *json_bu
             offset += (ip_can_type_len + padd);  // update offset
 
             // put buffer in JSON buffer
-            js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                               "\"ip-can-type\":%u, ", ip_can_type);
+            {
+                size_t rem = (js_ret < buffer_len) ? (buffer_len - js_ret) : 0;
+                int n = snprintf((json_buffer + js_ret), rem,
+                                 "\"ip-can-type\":%u, ", ip_can_type);
+                if (n < 0) {
+                    return -1;
+                }
+                if ((size_t)n >= rem) {
+                    js_ret = buffer_len;
+                    return js_ret;
+                }
+                js_ret += (size_t)n;
+            }
             break;
         }
 
