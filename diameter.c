@@ -847,8 +847,19 @@ int diameter_parser(const unsigned char *packet, int size_payload, char *json_bu
             offset += (rat_type_len + padd);  // update offset
 
             // put buffer in JSON buffer
-            js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                               "\"rat-type\":%u, ", rat_type);
+            {
+                size_t rem = (js_ret < buffer_len) ? (buffer_len - js_ret) : 0;
+                int n = snprintf((json_buffer + js_ret), rem,
+                                 "\"rat-type\":%u, ", rat_type);
+                if (n < 0) {
+                    return -1;
+                }
+                if ((size_t)n >= rem) {
+                    js_ret = buffer_len;
+                    return js_ret;
+                }
+                js_ret += (size_t)n;
+            }
             break;
         }
 
@@ -871,8 +882,18 @@ int diameter_parser(const unsigned char *packet, int size_payload, char *json_bu
         } // switch
     }
 
-    js_ret += snprintf((json_buffer + js_ret - 2), 3, "%s", "}}");
-    js_ret -= 2;
+    {
+        size_t base = (js_ret >= 2) ? (js_ret - 2) : js_ret;
+        size_t rem = (base < buffer_len) ? (buffer_len - base) : 0;
+        int n = snprintf((json_buffer + base), rem, "%s", "}}");
+        if (n < 0) {
+            return -1;
+        }
+        if ((size_t)n >= rem) {
+            return buffer_len;
+        }
+        js_ret = base + (size_t)n;
+    }
 
     return js_ret; // OK
 }
