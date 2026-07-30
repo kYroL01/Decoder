@@ -28,6 +28,23 @@
 #include <byteswap.h>
 #include "rtcp.h"
 
+/**
+   Safely append formatted text to json_buffer at offset ret.
+   snprintf's return value can exceed the remaining buffer space when the
+   output is truncated, so the remaining size is clamped before use and the
+   return value is checked before it is added to ret. On truncation or
+   error the buffer position is capped and the function returns immediately.
+**/
+#define APPEND_JSON(...)                                                     \
+    do {                                                                     \
+        size_t _rem = ((size_t)ret < (size_t)buffer_len) ?                   \
+            (size_t)buffer_len - (size_t)ret : 0;                            \
+        int _n = snprintf(json_buffer + ret, _rem, __VA_ARGS__);             \
+        if (_n < 0) return -1;                                               \
+        if ((size_t)_n >= _rem) { ret = buffer_len; return ret; }            \
+        ret += _n;                                                          \
+    } while (0)
+
 int check_rtcp_version (char *packet, int len) {
 
 	if(packet == NULL || len == 0) return -1;
@@ -57,7 +74,7 @@ int rtcp_parser(char *packet, int len, char *json_buffer, int buffer_len) {
 	char *rptr;
 
     // build the JSON buffer
-	ret += snprintf(json_buffer, buffer_len, "{ ");
+	APPEND_JSON("{ ");
 
 	int pno = 0, total = len;
 	while(rtcp) {
@@ -72,7 +89,7 @@ int rtcp_parser(char *packet, int len, char *json_buffer, int buffer_len) {
             printf("#%d SR (200)\n", pno);
             rtcp_sr_t *sr = (rtcp_sr_t*)rtcp;
 
-            ret += snprintf(json_buffer + ret, buffer_len - ret, SENDER_REPORT_JSON,
+            APPEND_JSON(SENDER_REPORT_JSON,
                             sender_info_get_ntp_timestamp_msw(&sr->si),
                             sender_info_get_ntp_timestamp_lsw(&sr->si),
                             sender_info_get_octet_count(&sr->si),
@@ -81,7 +98,7 @@ int rtcp_parser(char *packet, int len, char *json_buffer, int buffer_len) {
 
             if(sr->header.rc > 0) {
 
-                ret += snprintf(json_buffer + ret, buffer_len - ret, REPORT_BLOCK_JSON,
+                APPEND_JSON(REPORT_BLOCK_JSON,
 								ntohl(sr->ssrc), rtcp->type,
 								report_block_get_ssrc(&sr->rb[0]),
 								report_block_get_high_ext_seq(&sr->rb[0]),
@@ -104,7 +121,7 @@ int rtcp_parser(char *packet, int len, char *json_buffer, int buffer_len) {
 
             if(rr->header.rc > 0) {
 
-                ret += snprintf(json_buffer+ret, buffer_len - ret, REPORT_BLOCK_JSON,
+                APPEND_JSON(REPORT_BLOCK_JSON,
 								ntohl(rr->ssrc), rtcp->type,
 								report_block_get_ssrc(&rr->rb[0]),
 								report_block_get_high_ext_seq(&rr->rb[0]),
@@ -132,7 +149,7 @@ int rtcp_parser(char *packet, int len, char *json_buffer, int buffer_len) {
 
             char *end = (char*) rptr + (4*(rtcp_header_get_length(&sdes->header) + 1) -15);
 
-            ret += snprintf(json_buffer+ret, buffer_len - ret, SDES_REPORT_BEGIN_JSON, ntohl(sdes->ssrc), sdes_chunk_get_csrc(&sdes->chunk));
+            APPEND_JSON(SDES_REPORT_BEGIN_JSON, ntohl(sdes->ssrc), sdes_chunk_get_csrc(&sdes->chunk));
 
             while(rptr < end) {
 
@@ -145,7 +162,7 @@ int rtcp_parser(char *packet, int len, char *json_buffer, int buffer_len) {
 
                     rptr += 2;
 
-                    ret += snprintf(json_buffer+ret, buffer_len - ret, SDES_REPORT_INFO_JSON, chunk_type, chunk_len, rptr);
+                    APPEND_JSON(SDES_REPORT_INFO_JSON, chunk_type, chunk_len, rptr);
 
                     sdes_report_count++;
 
@@ -160,7 +177,7 @@ int rtcp_parser(char *packet, int len, char *json_buffer, int buffer_len) {
             /* cut , off */
             ret -= 1;
 
-            ret += snprintf(json_buffer + ret, buffer_len - ret, SDES_REPORT_END_JSON, sdes_report_count);
+            APPEND_JSON(SDES_REPORT_END_JSON, sdes_report_count);
 
             break;
         }
@@ -176,7 +193,7 @@ int rtcp_parser(char *packet, int len, char *json_buffer, int buffer_len) {
             struct rtcp_xr_t *rtcp_xr = (struct rtcp_xr_t *) rtcp;
 
             // start to parse field and create json array
-            ret += snprintf(json_buffer + ret, buffer_len - ret, EXTENDED_REPORT_JSON,
+            APPEND_JSON(EXTENDED_REPORT_JSON,
                             rtcpxr_header_get_type(&rtcp_xr->xr_header),
                             rtcpxr_header_get_id(&rtcp_xr->block),
                             rtcpxr_header_get_loss(&rtcp_xr->block),
@@ -202,8 +219,9 @@ int rtcp_parser(char *packet, int len, char *json_buffer, int buffer_len) {
                             rtcpxr_header_JB_max(&rtcp_xr->block),
                             rtcpxr_header_JB_abs_max(&rtcp_xr->block));
 
-            /* ret -= 1; */
-            ret += snprintf(json_buffer+ret-1, buffer_len-ret+1, "}");
+            /* overwrite the trailing char with the closing brace */
+            if(ret > 0) ret -= 1;
+            APPEND_JSON("}");
 
             break;
         }
@@ -240,7 +258,9 @@ int rtcp_parser(char *packet, int len, char *json_buffer, int buffer_len) {
     /* bad parsed message */
     if(ret < 10) return 0;
 
-    ret += snprintf(json_buffer+ret-1, buffer_len-ret+1, "}");
+    /* overwrite the trailing char with the closing brace */
+    if(ret > 0) ret -= 1;
+    APPEND_JSON("}");
 
     if(is_xr == 1) printf("RTCP-XR packet\n");
 

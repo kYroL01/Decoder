@@ -27,6 +27,23 @@
 #include "globals.h"
 #include "rtsp.h"
 
+/**
+   Safely append formatted text to json_buffer at offset js_ret.
+   snprintf's return value can exceed the remaining buffer space when the
+   output is truncated, so the remaining size is clamped before use and the
+   return value is checked before it is added to js_ret. On truncation or
+   error the function returns -1 immediately.
+**/
+#define APPEND_JSON(...)                                                     \
+    do {                                                                     \
+        size_t _rem = ((size_t)js_ret < (size_t)buffer_len) ?                \
+            (size_t)buffer_len - (size_t)js_ret : 0;                         \
+        int _n = snprintf(json_buffer + js_ret, _rem, __VA_ARGS__);          \
+        if (_n < 0) return -1;                                               \
+        if ((size_t)_n >= _rem) return -1;                                   \
+        js_ret += _n;                                                       \
+    } while (0)
+
 // Check if String s begins with the given prefix
 static int starts_with(const char *s, const char *prefix) {
 
@@ -88,59 +105,46 @@ int rtsp_parser(const u_char *packet, int size_payload, char *json_buffer, int b
        Create JSON buffer
     **/
     /* { */
-    js_ret += snprintf((json_buffer + js_ret), buffer_len, "{ \"rtsp_report_information\":{ ");
+    APPEND_JSON("{ \"rtsp_report_information\":{ ");
     // TYPE
     if(msg->msg_type == 0)
-        js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                           "\"type\":%s, ", "request");
+        APPEND_JSON("\"type\":%s, ", "request");
     else
-        js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                           "\"type\":%s, ", "response");
+        APPEND_JSON("\"type\":%s, ", "response");
     // COMMAND
-    js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                       "\"command\":%s, ", (msg->command == NULL) ? "-" : msg->command);
+    APPEND_JSON("\"command\":%s, ", (msg->command == NULL) ? "-" : msg->command);
     // STATUS CODE
-    js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                       "\"status code\":%s, ", (msg->status_code == NULL) ? "-" : msg->status_code);
+    APPEND_JSON("\"status code\":%s, ", (msg->status_code == NULL) ? "-" : msg->status_code);
     // SEQNUM
-    js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                       "\"seq-num\":%s, ", (msg->seq_num == NULL) ? "-" : msg->seq_num);
+    APPEND_JSON("\"seq-num\":%s, ", (msg->seq_num == NULL) ? "-" : msg->seq_num);
     // SESSION
-    js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                       "\"session\":%s, ", (msg->session == NULL) ? "-" : msg->session);
+    APPEND_JSON("\"session\":%s, ", (msg->session == NULL) ? "-" : msg->session);
     // SERVER
-    js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                       "\"server\":%s, ", (msg->server == NULL) ? "-" : msg->server);
+    APPEND_JSON("\"server\":%s, ", (msg->server == NULL) ? "-" : msg->server);
     // URI
-    js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                       "\"uri\":%s, ", (msg->uri == NULL) ? "-" : msg->uri);
+    APPEND_JSON("\"uri\":%s, ", (msg->uri == NULL) ? "-" : msg->uri);
     // UA
-    js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                       "\"user-agent\":%s, ", (msg->ua == NULL) ? "-" : msg->ua);
+    APPEND_JSON("\"user-agent\":%s, ", (msg->ua == NULL) ? "-" : msg->ua);
     // CONTENT BASE
-    js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                       "\"content-base\":%s, ", (msg->content_base == NULL) ? "-" : msg->content_base);
+    APPEND_JSON("\"content-base\":%s, ", (msg->content_base == NULL) ? "-" : msg->content_base);
     // CONTENT LEN
-    js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                       "\"content-len\":%s, ", (msg->content_len == NULL) ? "-" : msg->content_len);
+    APPEND_JSON("\"content-len\":%s, ", (msg->content_len == NULL) ? "-" : msg->content_len);
     // CONTENT TYPE
-    js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                       "\"content-type\":%s, ", (msg->content_type == NULL) ? "-" : msg->content_type);
+    APPEND_JSON("\"content-type\":%s, ", (msg->content_type == NULL) ? "-" : msg->content_type);
     // PROTOCOL
-    js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                           "\"protocol\":%s, ", (msg->protocol == NULL) ? "-" : msg->protocol);
+    APPEND_JSON("\"protocol\":%s, ", (msg->protocol == NULL) ? "-" : msg->protocol);
     // CACHE CONTROL
-    js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                       "\"cache control\":%s, ", (msg->cache_control == NULL) ? "-" : msg->cache_control);
+    APPEND_JSON("\"cache control\":%s, ", (msg->cache_control == NULL) ? "-" : msg->cache_control);
     // TRANSPORT
-    js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                       "\"transport\":%s ", (msg->transport == NULL) ? "-" : msg->transport);
+    APPEND_JSON("\"transport\":%s ", (msg->transport == NULL) ? "-" : msg->transport);
     // SDP
-    js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                       "\"sdp\":%s ", (msg->sdp == NULL) ? "-" : msg->sdp);
+    APPEND_JSON("\"sdp\":%s ", (msg->sdp == NULL) ? "-" : msg->sdp);
     /* } */
-    js_ret += snprintf((json_buffer + js_ret - 1), (buffer_len - js_ret + 1), " }");
-    js_ret += snprintf((json_buffer + js_ret - 1), (buffer_len - js_ret + 1), " }");
+    /* overwrite the trailing char with the closing braces */
+    if(js_ret > 0) js_ret -= 1;
+    APPEND_JSON(" }");
+    if(js_ret > 0) js_ret -= 1;
+    APPEND_JSON(" }");
 
     if(ret != 0) return -1;
     }

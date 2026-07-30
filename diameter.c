@@ -30,6 +30,23 @@
 
 #define APP_UNK "APP ID unknown"
 
+/**
+   Safely append formatted text to json_buffer at offset js_ret.
+   snprintf's return value can exceed the remaining buffer space when the
+   output is truncated, so the remaining size is clamped before use and the
+   return value is checked before it is added to js_ret. On truncation or
+   error the buffer position is capped and the function returns immediately.
+**/
+#define APPEND_JSON(...)                                                     \
+    do {                                                                     \
+        size_t _rem = ((size_t)js_ret < (size_t)buffer_len) ?                \
+            (size_t)buffer_len - (size_t)js_ret : 0;                         \
+        int _n = snprintf(json_buffer + js_ret, _rem, __VA_ARGS__);          \
+        if (_n < 0) return -1;                                               \
+        if ((size_t)_n >= _rem) { js_ret = buffer_len; return js_ret; }      \
+        js_ret += _n;                                                       \
+    } while (0)
+
 /* List of ALL the structures for the AVP information block */
 static char *session_id;
 static char *auth_sess_st;
@@ -184,8 +201,7 @@ int diameter_parser(const unsigned char *packet, int size_payload, char *json_bu
 
 
     /*** CREATE JSON BUFFER ***/
-    js_ret += snprintf(json_buffer, buffer_len,
-                       DIAMETER_HEADER_JSON, type, command, app_id, hop_by_hop_str, end_to_end_str);
+    APPEND_JSON(DIAMETER_HEADER_JSON, type, command, app_id, hop_by_hop_str, end_to_end_str);
 
     /***** END of parsing Diamter Header *****/
 
@@ -211,7 +227,7 @@ int diameter_parser(const unsigned char *packet, int size_payload, char *json_bu
     /**
        Create json buffer
     **/
-    js_ret += snprintf((json_buffer + js_ret), buffer_len, "\"payload\":{ ");
+    APPEND_JSON("\"payload\":{ ");
 
     while(start < end && offset < length) {
 
@@ -267,8 +283,7 @@ int diameter_parser(const unsigned char *packet, int size_payload, char *json_bu
             offset += (sess_id_len + padd);  // update offset
 
             // put buffer in JSON buffer
-            js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                               "\"session-id\":\"%s\", ", session_id);
+            APPEND_JSON("\"session-id\":\"%s\", ", session_id);
             // free
             if(session_id)
                 free(session_id);
@@ -308,8 +323,7 @@ int diameter_parser(const unsigned char *packet, int size_payload, char *json_bu
             offset += (auth_sess_len + padd);  // update offset
 
             // put buffer in JSON buffer
-            js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                               "\"auth-sess-st\":\"%s\", ", auth_sess_st);
+            APPEND_JSON("\"auth-sess-st\":\"%s\", ", auth_sess_st);
             // free
             if(auth_sess_st)
                 free(auth_sess_st);
@@ -339,8 +353,7 @@ int diameter_parser(const unsigned char *packet, int size_payload, char *json_bu
             offset += (auth_req_len + padd);  // update offset
 
             // put buffer in JSON buffer
-            js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                               "\"auth-req-type\":\"%s\", ", auth_req_type);
+            APPEND_JSON("\"auth-req-type\":\"%s\", ", auth_req_type);
             // free
             if(auth_req_type)
                 free(auth_req_type);
@@ -370,8 +383,7 @@ int diameter_parser(const unsigned char *packet, int size_payload, char *json_bu
             offset += (sess_fail_len + padd);  // update offset
 
             // put buffer in JSON buffer
-            js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                               "\"sess-server-failover\":\"%s\", ", sess_fail_type);
+            APPEND_JSON("\"sess-server-failover\":\"%s\", ", sess_fail_type);
             // free
             if(sess_fail_type)
                 free(sess_fail_type);
@@ -395,8 +407,7 @@ int diameter_parser(const unsigned char *packet, int size_payload, char *json_bu
             offset += (org_host_len + padd);  // update offset
 
             // put buffer in JSON buffer
-            js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                               "\"origin-host\":\"%s\", ", org_host);
+            APPEND_JSON("\"origin-host\":\"%s\", ", org_host);
             // free
             if(org_host)
                 free(org_host);
@@ -420,8 +431,7 @@ int diameter_parser(const unsigned char *packet, int size_payload, char *json_bu
             offset += (dst_host_len + padd);  // update offset
 
             // put buffer in JSON buffer
-            js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                               "\"destination-host\":\"%s\", ", dst_host);
+            APPEND_JSON("\"destination-host\":\"%s\", ", dst_host);
             // free
             if(dst_host)
                 free(dst_host);
@@ -445,8 +455,7 @@ int diameter_parser(const unsigned char *packet, int size_payload, char *json_bu
             offset += (org_realm_len + padd);  // update offset
 
             // put buffer in JSON buffer
-            js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                               "\"origin-realm\":\"%s\", ", org_realm);
+            APPEND_JSON("\"origin-realm\":\"%s\", ", org_realm);
             // free
             if(org_realm)
                 free(org_realm);
@@ -470,8 +479,7 @@ int diameter_parser(const unsigned char *packet, int size_payload, char *json_bu
             offset += (dst_realm_len + padd);  // update offset
 
             // put buffer in JSON buffer
-            js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                               "\"destination-realm\":\"%s\", ", dst_realm);
+            APPEND_JSON("\"destination-realm\":\"%s\", ", dst_realm);
             // free
             if(dst_realm)
                 free(dst_realm);
@@ -495,8 +503,7 @@ int diameter_parser(const unsigned char *packet, int size_payload, char *json_bu
             offset += (auth_app_len + padd);  // update offset
 
             // put buffer in JSON buffer
-            js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                               "\"auth-app-ID\":%x, ", auth_app_id);
+            APPEND_JSON("\"auth-app-ID\":%x, ", auth_app_id);
             break;
         }
 
@@ -517,11 +524,9 @@ int diameter_parser(const unsigned char *packet, int size_payload, char *json_bu
 
             // put buffer in JSON buffer
             if(vend_id == _3GPP_ID)
-                js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                                   "\"vendor-ID\":\"%s\", ", "3GPP");
+                APPEND_JSON("\"vendor-ID\":\"%s\", ", "3GPP");
             else
-                js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                                   "\"vendor-ID\":\"%s\", ", "Others");
+                APPEND_JSON("\"vendor-ID\":\"%s\", ", "Others");
             break;
         }
 
@@ -548,8 +553,7 @@ int diameter_parser(const unsigned char *packet, int size_payload, char *json_bu
             else if(res_code >= 5000 && res_code < 6000) strncpy(rc_buff, "Permanent Failure", sizeof(rc_buff));
 
             // put buffer in JSON buffer
-            js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                               "\"res-code\":\"%s\", ", rc_buff);
+            APPEND_JSON("\"res-code\":\"%s\", ", rc_buff);
             break;
         }
 
@@ -569,8 +573,7 @@ int diameter_parser(const unsigned char *packet, int size_payload, char *json_bu
             offset += (orgst_len + padd);  // update offset
 
             // put buffer in JSON buffer
-            js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                               "\"origin-state-id\":%u, ", orgst_id);
+            APPEND_JSON("\"origin-state-id\":%u, ", orgst_id);
             break;
         }
 
@@ -595,8 +598,7 @@ int diameter_parser(const unsigned char *packet, int size_payload, char *json_bu
             offset += (time_len + padd); // update offset
 
             // put buffer in JSON buffer
-            js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                               "\"event-timestamp\":\"%s\", ", buff_tm);
+            APPEND_JSON("\"event-timestamp\":\"%s\", ", buff_tm);
             break;
         }
 
@@ -628,8 +630,7 @@ int diameter_parser(const unsigned char *packet, int size_payload, char *json_bu
             offset += (exp_res_code_len + padd);  // update offset
 
             // put buffer in JSON buffer
-            js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                               "\"exp-result-code\":%u, ", exp_res_code);
+            APPEND_JSON("\"exp-result-code\":%u, ", exp_res_code);
             break;
         }
 
@@ -651,8 +652,7 @@ int diameter_parser(const unsigned char *packet, int size_payload, char *json_bu
             offset += (pub_id_len + padd);  // update offset
 
             // put buffer in JSON buffer
-            js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                               "\"public-identity\":\"%s\", ", pub_id);
+            APPEND_JSON("\"public-identity\":\"%s\", ", pub_id);
             // free
             if(pub_id)
                 free(pub_id);
@@ -686,8 +686,7 @@ int diameter_parser(const unsigned char *packet, int size_payload, char *json_bu
             offset += (subscr_id_type_len + padd);  // update offset
 
             // put buffer in JSON buffer
-            js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                               "\"subscr-id-type\":%u, ", subscr_id_type);
+            APPEND_JSON("\"subscr-id-type\":%u, ", subscr_id_type);
             break;
         }
 
@@ -711,10 +710,8 @@ int diameter_parser(const unsigned char *packet, int size_payload, char *json_bu
             offset += (subscr_id_data_len + padd);  // update offset
 
             // put buffer in JSON buffer
-            js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                               "\"country-code\":%u, ", country_code);
-            js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                               "\"subscr-id\":\"%s\", ", subscr_id_data);
+            APPEND_JSON("\"country-code\":%u, ", country_code);
+            APPEND_JSON("\"subscr-id\":\"%s\", ", subscr_id_data);
             break;
 
         }
@@ -736,8 +733,7 @@ int diameter_parser(const unsigned char *packet, int size_payload, char *json_bu
             offset += (visit_net_id_len + padd);  // update offset
 
             // put buffer in JSON buffer
-            js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                               "\"visit-network-id\":\"%s\", ", visit_net_id);
+            APPEND_JSON("\"visit-network-id\":\"%s\", ", visit_net_id);
             // free
             if(visit_net_id)
                 free(visit_net_id);
@@ -761,8 +757,7 @@ int diameter_parser(const unsigned char *packet, int size_payload, char *json_bu
             offset += (srv_name_len + padd);  // update offset
 
             // put buffer in JSON buffer
-            js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                               "\"server-name\":\"%s\", ", srv_name);
+            APPEND_JSON("\"server-name\":\"%s\", ", srv_name);
             // free
             if(srv_name)
                 free(srv_name);
@@ -779,8 +774,7 @@ int diameter_parser(const unsigned char *packet, int size_payload, char *json_bu
             offset += (username_len + padd);  // update offset
 
             // put buffer in JSON buffer
-            js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                               "\"user-name\":\%s\", ", username_id);
+            APPEND_JSON("\"user-name\":\"%s\", ", username_id);
             // free
             if(username_id)
                 free(username_id);
@@ -804,8 +798,7 @@ int diameter_parser(const unsigned char *packet, int size_payload, char *json_bu
             offset += (user_data_len + padd);  // update offset
 
             // put buffer in JSON buffer
-            js_ret += snprintf((json_buffer + js_ret), buffer_len - js_ret,
-                               "\"user-data\":\"%s\", ", user_data);
+            APPEND_JSON("\"user-data\":\"%s\", ", user_data);
             // free
             if(user_data)
                 free(user_data);
@@ -827,19 +820,7 @@ int diameter_parser(const unsigned char *packet, int size_payload, char *json_bu
             offset += (ip_can_type_len + padd);  // update offset
 
             // put buffer in JSON buffer
-            {
-                size_t rem = (js_ret < buffer_len) ? (buffer_len - js_ret) : 0;
-                int n = snprintf((json_buffer + js_ret), rem,
-                                 "\"ip-can-type\":%u, ", ip_can_type);
-                if (n < 0) {
-                    return -1;
-                }
-                if ((size_t)n >= rem) {
-                    js_ret = buffer_len;
-                    return js_ret;
-                }
-                js_ret += (size_t)n;
-            }
+            APPEND_JSON("\"ip-can-type\":%u, ", ip_can_type);
             break;
         }
 
@@ -858,19 +839,7 @@ int diameter_parser(const unsigned char *packet, int size_payload, char *json_bu
             offset += (rat_type_len + padd);  // update offset
 
             // put buffer in JSON buffer
-            {
-                size_t rem = (js_ret < buffer_len) ? (buffer_len - js_ret) : 0;
-                int n = snprintf((json_buffer + js_ret), rem,
-                                 "\"rat-type\":%u, ", rat_type);
-                if (n < 0) {
-                    return -1;
-                }
-                if ((size_t)n >= rem) {
-                    js_ret = buffer_len;
-                    return js_ret;
-                }
-                js_ret += (size_t)n;
-            }
+            APPEND_JSON("\"rat-type\":%u, ", rat_type);
             break;
         }
 
@@ -893,18 +862,9 @@ int diameter_parser(const unsigned char *packet, int size_payload, char *json_bu
         } // switch
     }
 
-    {
-        size_t base = (js_ret >= 2) ? (js_ret - 2) : js_ret;
-        size_t rem = (base < buffer_len) ? (buffer_len - base) : 0;
-        int n = snprintf((json_buffer + base), rem, "%s", "}}");
-        if (n < 0) {
-            return -1;
-        }
-        if ((size_t)n >= rem) {
-            return buffer_len;
-        }
-        js_ret = base + (size_t)n;
-    }
+    // overwrite the trailing ", " with the closing braces
+    js_ret = (js_ret >= 2) ? (js_ret - 2) : js_ret;
+    APPEND_JSON("%s", "}}");
 
     return js_ret; // OK
 }
