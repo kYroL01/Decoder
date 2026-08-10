@@ -2,13 +2,12 @@
 
 ### Core improvements
 1. [x] Find a better way to implement how the dissectors are called
-2. [ ] Implement multi-thread scenario
-3. [ ] Improve flow detection and create a separate module
-4. [ ] Add comments to prototype functions (for DOC)
+2. [ ] Implement a multi-thread scenario
+3. [x] Improve flow detection and create a separate module
+4. [x] Add comments to prototype functions (for DOC)
 5. [ ] Implement CMAKE
 6. [ ] Add IPv4 and IPv6 reassembly (ipreasm library)
-7. [ ] Add Travis check
-[ADD new improvments]
+[ADD new improvements]
 
 ### Protocols
 1. [ ] Add detection of Interleaved message (RTP/RTCP tunnel over TCP) for RTSP
@@ -18,5 +17,5 @@
 [ADD new protocols]
 
 ### New features
-1. [ ] JSON parser
+1. [x] JSON parser
 [ADD new features]
